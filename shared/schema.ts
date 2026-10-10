@@ -28,6 +28,7 @@ export const slipPayloadSchema = z.object({
   deviceId: z.string().optional(),
   seller: z.string().max(120).optional(),
   buyer: z.string().max(120).optional(),
+  receiptName: z.string().max(120).optional(),
   note: z.string().max(500).optional(),
   weightsG: z.array(z.number().int().positive()).min(1),
   ratePaisa: z.number().int().nonnegative(),

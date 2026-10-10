@@ -66,14 +66,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const inserted = await sql`
           INSERT INTO slips (
-            id, slip_code, created_at, device_id, seller, buyer, note,
+            id, slip_code, created_at, device_id, seller, buyer, receipt_name, note,
             bag_count, gross_g, tare_per_bag_g, net_g, rate_paisa, amount_paisa,
             commission_type, commission_value, commission_paisa,
             labour_type, labour_value, labour_paisa,
             charge_mode, round_to_rupee, total_paisa, total_rupees
           ) VALUES (
             ${slip.id}, ${slipCode}, ${slip.createdAt}::timestamptz, ${slip.deviceId ?? null},
-            ${slip.seller ?? null}, ${slip.buyer ?? null}, ${slip.note ?? null},
+            ${slip.seller ?? null}, ${slip.buyer ?? null}, ${slip.receiptName ?? null}, ${slip.note ?? null},
             ${calc.bagCount}, ${calc.grossG}, ${slip.tarePerBagG}, ${calc.netG}, ${slip.ratePaisa}, ${calc.amountPaisa},
             ${commissionType}, ${commissionValue}, ${calc.commissionPaisa},
             ${labourType}, ${labourValue}, ${calc.labourPaisa},

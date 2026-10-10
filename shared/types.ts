@@ -38,6 +38,7 @@ export interface SlipPayload {
   deviceId?: string;
   seller?: string;
   buyer?: string;
+  receiptName?: string;
   note?: string;
   weightsG: number[];
   ratePaisa: number;

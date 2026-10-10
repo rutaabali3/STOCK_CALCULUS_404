@@ -3,8 +3,8 @@ import { SlipCard } from '../components/SlipCard';
 import { CalcResult } from 'shared/types';
 import { ExtrasState } from '../components/ExtrasPanel';
 import { AppSettings } from '../lib/settings';
-import { shareOrDownloadSlip, generateSlipPng, downloadDataUrl } from '../lib/slipImage';
-import { Share2, Download, PlusCircle, ArrowLeft, Check } from 'lucide-react';
+import { shareOrDownloadSlip, generateSlipPng, generateSlipPdf, downloadDataUrl } from '../lib/slipImage';
+import { Share2, Download, PlusCircle, ArrowLeft, Check, FileText } from 'lucide-react';
 
 export interface SlipData {
   slipCode: string;
@@ -33,6 +33,12 @@ export const SlipView: React.FC<SlipViewProps> = ({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [currentWidthMm, setCurrentWidthMm] = useState<58 | 80 | 90>(settings.slipWidthMm);
 
+  // Default filename incorporating receipt name if provided, or slip code
+  const initialFileName = slipData.extras.receiptName?.trim()
+    ? `${slipData.extras.receiptName.trim()}-${slipData.slipCode}`
+    : `mandi-slip-${slipData.slipCode}`;
+  const [customFileName, setCustomFileName] = useState(initialFileName);
+
   const showToast = (msg: string) => {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(null), 3000);
@@ -42,7 +48,7 @@ export const SlipView: React.FC<SlipViewProps> = ({
     if (!cardRef.current) return;
     setLoading(true);
     try {
-      const res = await shareOrDownloadSlip(cardRef.current, slipData.slipCode);
+      const res = await shareOrDownloadSlip(cardRef.current, slipData.slipCode, customFileName);
       if (res.method === 'shared') {
         showToast('Slip shared successfully');
       } else {
@@ -55,15 +61,30 @@ export const SlipView: React.FC<SlipViewProps> = ({
     }
   };
 
-  const handleDownload = async () => {
+  const handleDownloadImage = async () => {
     if (!cardRef.current) return;
     setLoading(true);
     try {
       const dataUrl = await generateSlipPng(cardRef.current);
-      downloadDataUrl(dataUrl, `mandi-slip-${slipData.slipCode}.png`);
-      showToast('Slip image saved');
+      const name = customFileName.trim() ? customFileName.trim() : `mandi-slip-${slipData.slipCode}`;
+      downloadDataUrl(dataUrl, name.toLowerCase().endsWith('.png') ? name : `${name}.png`);
+      showToast('Slip image saved (PNG)');
     } catch {
       showToast('Failed to save image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!cardRef.current) return;
+    setLoading(true);
+    try {
+      const name = customFileName.trim() ? customFileName.trim() : `mandi-slip-${slipData.slipCode}`;
+      await generateSlipPdf(cardRef.current, name, currentWidthMm);
+      showToast('Slip PDF saved');
+    } catch {
+      showToast('Failed to save PDF');
     } finally {
       setLoading(false);
     }
@@ -144,7 +165,7 @@ export const SlipView: React.FC<SlipViewProps> = ({
 
       {/* Success Notification */}
       {successMsg && (
-        <div className="fixed bottom-24 left-4 right-4 max-w-md mx-auto bg-forest text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-2 z-50 text-sm font-semibold animate-fade-in">
+        <div className="fixed bottom-28 left-4 right-4 max-w-md mx-auto bg-forest text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-2 z-50 text-sm font-semibold animate-fade-in">
           <Check className="w-4 h-4 text-wheat" />
           <span>{successMsg}</span>
         </div>
@@ -152,27 +173,52 @@ export const SlipView: React.FC<SlipViewProps> = ({
 
       {/* Action Buttons Panel */}
       <div className="sticky bottom-0 bg-cream/95 backdrop-blur-md pt-2 space-y-2.5">
-        <div className="grid grid-cols-2 gap-2">
+        {/* Optional Custom File / Receipt Name */}
+        <div className="bg-white p-2.5 rounded-xl border border-moss/20">
+          <label className="block text-[11px] font-bold text-mist uppercase tracking-wider mb-1">
+            File / Receipt Name
+          </label>
+          <input
+            type="text"
+            value={customFileName}
+            onChange={(e) => setCustomFileName(e.target.value)}
+            placeholder={`mandi-slip-${slipData.slipCode}`}
+            className="w-full h-9 px-2.5 text-xs bg-cream/30 border border-moss/20 rounded-lg focus:border-forest focus:outline-none font-semibold text-ink"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
           {/* Share Button */}
           <button
             type="button"
             onClick={handleShare}
             disabled={loading}
-            className="h-12 bg-wheat hover:bg-wheat/90 active:scale-[0.98] text-forest font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50"
+            className="h-12 bg-wheat hover:bg-wheat/90 active:scale-[0.98] text-forest font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md transition-all disabled:opacity-50"
           >
             <Share2 className="w-4 h-4 stroke-[2.5]" />
-            <span>{loading ? 'Processing...' : 'Share Slip'}</span>
+            <span>{loading ? '...' : 'Share'}</span>
           </button>
 
-          {/* Download Button */}
+          {/* Download Image (PNG) */}
           <button
             type="button"
-            onClick={handleDownload}
+            onClick={handleDownloadImage}
             disabled={loading}
-            className="h-12 bg-white hover:bg-cream/40 border border-moss/30 active:scale-[0.98] text-forest font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50"
+            className="h-12 bg-white hover:bg-cream/40 border border-moss/30 active:scale-[0.98] text-forest font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
           >
             <Download className="w-4 h-4 stroke-[2.5]" />
-            <span>Save Image</span>
+            <span>PNG Image</span>
+          </button>
+
+          {/* Download PDF */}
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={loading}
+            className="h-12 bg-white hover:bg-cream/40 border border-moss/30 active:scale-[0.98] text-forest font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
+          >
+            <FileText className="w-4 h-4 text-forest stroke-[2.5]" />
+            <span>PDF File</span>
           </button>
         </div>
 

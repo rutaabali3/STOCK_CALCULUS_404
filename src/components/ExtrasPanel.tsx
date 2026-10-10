@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export interface ExtrasState {
+  receiptName?: string;
   tareKgStr: string;
   commissionType: 'percent' | 'fixed';
   commissionValStr: string;
@@ -26,6 +27,7 @@ export const ExtrasPanel: React.FC<ExtrasPanelProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const hasActiveExtras =
+    Boolean(extras.receiptName?.trim()) ||
     Boolean(extras.tareKgStr.trim()) ||
     Boolean(extras.commissionValStr.trim()) ||
     Boolean(extras.labourValStr.trim()) ||
@@ -54,6 +56,21 @@ export const ExtrasPanel: React.FC<ExtrasPanelProps> = ({
 
       {isOpen && (
         <div className="p-4 pt-2 border-t border-moss/10 space-y-4 bg-cream/10">
+          {/* Receipt / Lot Name */}
+          <div>
+            <label className="block text-xs font-semibold text-mist mb-1">
+              Receipt Name / Lot Title (Optional)
+            </label>
+            <input
+              type="text"
+              maxLength={120}
+              placeholder="e.g. Aslam Wheat, Lot #4"
+              value={extras.receiptName || ''}
+              onChange={(e) => onChange({ receiptName: e.target.value })}
+              className="w-full h-11 px-3 text-sm bg-white border border-moss/30 rounded-lg focus:border-forest focus:outline-none font-medium"
+            />
+          </div>
+
           {/* Tare Weight */}
           <div>
             <label className="block text-xs font-semibold text-mist mb-1">

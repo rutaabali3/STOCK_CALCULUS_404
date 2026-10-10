@@ -68,6 +68,15 @@ export const SlipCard = React.forwardRef<HTMLDivElement, SlipCardProps>(
           </p>
         </div>
 
+        {/* Receipt Name / Lot Title (if provided) */}
+        {extras.receiptName?.trim() && (
+          <div className="py-1 px-2 mb-2 text-center bg-cream/60 rounded border border-ink/30">
+            <span className="text-xs font-black tracking-wider uppercase text-forest">
+              {extras.receiptName.trim()}
+            </span>
+          </div>
+        )}
+
         {/* 2. Slip Code & Date/Time */}
         <div className="flex justify-between items-center text-xs py-1.5 border-y-2 border-ink font-semibold">
           <span>

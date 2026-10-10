@@ -63,6 +63,7 @@ export default function App() {
       deviceId: getOrCreateDeviceId(),
       seller: extras.seller.trim() || undefined,
       buyer: extras.buyer.trim() || undefined,
+      receiptName: extras.receiptName?.trim() || undefined,
       note: extras.note.trim() || undefined,
       weightsG,
       ratePaisa: result.amountPaisa > 0 ? Math.round((result.amountPaisa * 40000) / result.netG) : 0,
@@ -103,6 +104,7 @@ export default function App() {
       weightsG: record.payload.weightsG,
       calcResult: record.calcResult,
       extras: {
+        receiptName: record.payload.receiptName || '',
         tareKgStr: record.payload.tarePerBagG > 0 ? formatDecimal(record.payload.tarePerBagG, 3) : '',
         commissionType: 'percent',
         commissionValStr: '',

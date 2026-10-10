@@ -9,6 +9,7 @@ create table if not exists slips (
   device_id       text,
   seller          text,
   buyer           text,
+  receipt_name    text,
   note            text,
   bag_count       int    not null check (bag_count > 0),
   gross_g         bigint not null check (gross_g > 0),

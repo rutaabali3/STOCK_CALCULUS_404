@@ -1,4 +1,12 @@
 import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
+
+/**
+ * Sanitizes a string for safe filesystem filename.
+ */
+export function sanitizeFilename(name: string): string {
+  return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').trim();
+}
 
 /**
  * Generates a high-resolution PNG from an HTML element using html-to-image.
@@ -10,6 +18,31 @@ export async function generateSlipPng(element: HTMLElement): Promise<string> {
     backgroundColor: '#FFFFFF',
     cacheBust: true,
   });
+}
+
+/**
+ * Generates and downloads a custom-sized PDF receipt from an HTML element.
+ */
+export async function generateSlipPdf(
+  element: HTMLElement,
+  filename: string,
+  widthMm: number
+): Promise<void> {
+  const dataUrl = await generateSlipPng(element);
+  const elWidth = element.offsetWidth || 384;
+  const elHeight = element.offsetHeight || 600;
+  // Calculate proportional height in mm
+  const heightMm = Math.max(80, Math.round((elHeight / elWidth) * widthMm));
+
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [widthMm, heightMm],
+  });
+
+  doc.addImage(dataUrl, 'PNG', 0, 0, widthMm, heightMm);
+  const pdfName = filename.toLowerCase().endsWith('.pdf') ? filename : `${filename}.pdf`;
+  doc.save(pdfName);
 }
 
 /**
@@ -42,13 +75,17 @@ export function downloadDataUrl(dataUrl: string, filename: string): void {
 
 /**
  * Shares or downloads the slip image.
- * Uses Web Share API (with files) if supported, else falls back to direct download and opening in a new tab.
+ * Uses Web Share API (with files) if supported, else falls back to direct download.
  */
 export async function shareOrDownloadSlip(
   element: HTMLElement,
-  slipCode: string
+  slipCode: string,
+  customFilename?: string
 ): Promise<{ method: 'shared' | 'downloaded' | 'opened' }> {
-  const filename = `mandi-slip-${slipCode}.png`;
+  const baseName = customFilename?.trim()
+    ? sanitizeFilename(customFilename)
+    : `mandi-slip-${slipCode}`;
+  const filename = baseName.toLowerCase().endsWith('.png') ? baseName : `${baseName}.png`;
   const dataUrl = await generateSlipPng(element);
 
   // Check if Web Share API with file support is available
@@ -68,7 +105,6 @@ export async function shareOrDownloadSlip(
       if (err instanceof Error && err.name === 'AbortError') {
         return { method: 'shared' };
       }
-      // Otherwise proceed to fallback
     }
   }
 
