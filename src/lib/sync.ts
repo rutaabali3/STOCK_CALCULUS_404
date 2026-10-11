@@ -1,4 +1,11 @@
-import { getMandiDB, getPendingSlips, saveSlipRecord, LocalSlipRecord } from './db';
+import {
+  getMandiDB,
+  getPendingSlips,
+  saveSlipRecord,
+  resetSlipSyncStatus,
+  resetAllRejectedSlips,
+  LocalSlipRecord,
+} from './db';
 import { SlipPayload } from 'shared/types';
 
 export interface SyncState {
@@ -162,6 +169,21 @@ class SyncWorker {
       this.isRunning = false;
       this.notify();
     }
+  }
+
+  public async retrySlip(id: string): Promise<void> {
+    await resetSlipSyncStatus(id);
+    await this.updatePendingCount();
+    await this.triggerSync();
+  }
+
+  public async retryAllRejected(): Promise<number> {
+    const count = await resetAllRejectedSlips();
+    await this.updatePendingCount();
+    if (count > 0) {
+      await this.triggerSync();
+    }
+    return count;
   }
 
   public destroy() {

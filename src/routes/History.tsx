@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LocalSlipRecord, getAllSlipRecords, voidSlipRecord } from '../lib/db';
 import { formatDecimal } from 'shared/decimal';
-import { Search, Ban, Eye, ArrowLeft, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { Search, Ban, Eye, ArrowLeft, CheckCircle2, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Md3Button } from '../components/md3/Md3Button';
 import { Md3Dialog } from '../components/md3/Md3Dialog';
 import { Md3TextField } from '../components/md3/Md3TextField';
 import { Md3Chip } from '../components/md3/Md3Chip';
+import { syncWorker } from '../lib/sync';
 
 interface HistoryProps {
   onSelectSlip: (record: LocalSlipRecord) => void;
   onBack: () => void;
 }
 
-type FilterStatus = 'all' | 'pending' | 'synced' | 'voided';
+type FilterStatus = 'all' | 'pending' | 'synced' | 'rejected' | 'voided';
 
 export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
   const [records, setRecords] = useState<LocalSlipRecord[]>([]);
@@ -27,6 +28,12 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
 
   useEffect(() => {
     loadSlips();
+    const unsub = syncWorker.subscribe((state) => {
+      if (!state.isSyncing) {
+        loadSlips();
+      }
+    });
+    return unsub;
   }, []);
 
   const loadSlips = async () => {
@@ -53,6 +60,21 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
     await loadSlips();
   };
 
+  const rejectedSlips = useMemo(
+    () => records.filter((r) => r.syncStatus === 'rejected' && !r.voided),
+    [records]
+  );
+
+  const handleRetrySlip = async (id: string) => {
+    await syncWorker.retrySlip(id);
+    await loadSlips();
+  };
+
+  const handleRetryAll = async () => {
+    await syncWorker.retryAllRejected();
+    await loadSlips();
+  };
+
   const filteredSlips = useMemo(() => {
     let list = records;
 
@@ -60,6 +82,8 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
       list = list.filter((r) => r.syncStatus === 'pending' && !r.voided);
     } else if (activeFilter === 'synced') {
       list = list.filter((r) => r.syncStatus === 'synced' && !r.voided);
+    } else if (activeFilter === 'rejected') {
+      list = list.filter((r) => r.syncStatus === 'rejected' && !r.voided);
     } else if (activeFilter === 'voided') {
       list = list.filter((r) => Boolean(r.voided));
     }
@@ -130,6 +154,14 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
             selected={activeFilter === 'synced'}
             onClick={() => setActiveFilter('synced')}
           />
+          {rejectedSlips.length > 0 && (
+            <Md3Chip
+              label={`Rejected (${rejectedSlips.length})`}
+              selected={activeFilter === 'rejected'}
+              onClick={() => setActiveFilter('rejected')}
+              className="!border-md-error/40 text-md-error"
+            />
+          )}
           <Md3Chip
             label="Voided"
             selected={activeFilter === 'voided'}
@@ -137,6 +169,32 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
           />
         </div>
       </div>
+
+      {/* Rejected Slips Alert Banner */}
+      {rejectedSlips.length > 0 && (
+        <div className="p-4 rounded-2xl bg-md-error-container/20 border border-md-error/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-start sm:items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-md-error shrink-0 mt-0.5 sm:mt-0" />
+            <div>
+              <p className="text-sm font-bold text-md-on-surface">
+                {rejectedSlips.length} {rejectedSlips.length === 1 ? 'slip is' : 'slips are'} marked Rejected
+              </p>
+              <p className="text-xs text-md-on-surface-variant">
+                Postgres database tables have been auto-initialized. Click to retry syncing now.
+              </p>
+            </div>
+          </div>
+          <Md3Button
+            variant="filled"
+            size="sm"
+            onClick={handleRetryAll}
+            icon={<RefreshCw className="w-3.5 h-3.5" />}
+            className="!bg-md-error !text-md-on-error shrink-0 font-bold self-start sm:self-auto"
+          >
+            Retry Sync ({rejectedSlips.length})
+          </Md3Button>
+        </div>
+      )}
 
       {/* List of Slips in Responsive Grid */}
       {loading ? (
@@ -190,10 +248,24 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
                             <span>Synced</span>
                           </span>
                         ) : rec.syncStatus === 'rejected' ? (
-                          <span className="flex items-center gap-1 text-[11px] font-bold text-md-error">
-                            <AlertTriangle className="w-3.5 h-3.5" />
-                            <span>Rejected</span>
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="flex items-center gap-1 text-[11px] font-bold text-md-error">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              <span>Rejected</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRetrySlip(rec.id);
+                              }}
+                              className="px-2 py-0.5 text-[10px] font-bold bg-md-error/15 text-md-error hover:bg-md-error hover:text-md-on-error rounded-full transition-colors flex items-center gap-1"
+                              title="Retry syncing this slip"
+                            >
+                              <RefreshCw className="w-2.5 h-2.5" />
+                              <span>Retry</span>
+                            </button>
+                          </div>
                         ) : (
                           <span className="flex items-center gap-1 text-[11px] font-bold text-md-on-surface-variant">
                             <Clock className="w-3.5 h-3.5" />
@@ -233,6 +305,22 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
                           B: <strong className="text-md-on-surface">{rec.payload.buyer}</strong>
                         </span>
                       )}
+                    </div>
+                  )}
+
+                  {/* Rejected Error Notice */}
+                  {rec.syncStatus === 'rejected' && (
+                    <div className="text-[11px] text-md-error bg-md-error-container/20 px-2.5 py-1.5 rounded-xl border border-md-error/25 flex items-center justify-between gap-2">
+                      <span className="truncate">
+                        {rec.syncError || 'Sync failed. Click Retry to upload to database.'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRetrySlip(rec.id)}
+                        className="underline text-[10px] font-bold shrink-0 hover:opacity-80"
+                      >
+                        Retry
+                      </button>
                     </div>
                   )}
 

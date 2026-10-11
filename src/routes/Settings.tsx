@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { AppSettings, ThemeMode, SlipFontSize, DEFAULT_SLIP_CUSTOMIZATION } from '../lib/settings';
 import { exportBackupData, importBackupData, BackupData, getOrCreateDeviceId } from '../lib/db';
 import { formatDecimal, parseDecimal } from 'shared/decimal';
-import { Download, Upload, ArrowLeft, Check, ShieldCheck, Sun, Moon, Monitor, SlidersHorizontal, LogOut } from 'lucide-react';
+import { Download, Upload, ArrowLeft, Check, ShieldCheck, Sun, Moon, Monitor, SlidersHorizontal, LogOut, Cloud, RefreshCw } from 'lucide-react';
 import { Md3Button } from '../components/md3/Md3Button';
 import { Md3Card } from '../components/md3/Md3Card';
 import { Md3TextField } from '../components/md3/Md3TextField';
 import { Md3SegmentedButton } from '../components/md3/Md3SegmentedButton';
 import { Md3Switch } from '../components/md3/Md3Switch';
+import { syncWorker } from '../lib/sync';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -479,7 +480,38 @@ export const Settings: React.FC<SettingsProps> = ({
           </div>
         </Md3Card>
 
-        {/* Card 6: Security & Session */}
+        {/* Card 6: Cloud Database Sync */}
+        <Md3Card variant="elevated" className="p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
+              Cloud Database Sync
+            </h2>
+            <span className="flex items-center gap-1.5 text-xs font-bold text-md-primary">
+              <Cloud className="w-4 h-4" />
+              <span>Neon Postgres</span>
+            </span>
+          </div>
+          <p className="text-xs text-md-on-surface-variant leading-relaxed">
+            All weighment slips are automatically synced to your cloud database. Click below to trigger a sync or retry any rejected slips.
+          </p>
+          <div className="pt-2">
+            <Md3Button
+              variant="tonal"
+              size="md"
+              onClick={async () => {
+                const count = await syncWorker.retryAllRejected();
+                await syncWorker.triggerSync();
+                showToast(count > 0 ? `Retrying sync for ${count} rejected slips...` : 'Cloud sync initiated');
+              }}
+              icon={<RefreshCw className="w-4 h-4 text-md-primary" />}
+              className="w-full"
+            >
+              Sync & Retry All Slips
+            </Md3Button>
+          </div>
+        </Md3Card>
+
+        {/* Card 7: Security & Session */}
         <Md3Card variant="elevated" className="p-5 space-y-3">
           <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
             Security & Access Lock

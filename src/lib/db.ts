@@ -153,6 +153,35 @@ export async function getPendingSlips(): Promise<LocalSlipRecord[]> {
   return await db.getAllFromIndex('slips', 'by-syncStatus', 'pending');
 }
 
+export async function resetSlipSyncStatus(id: string): Promise<void> {
+  const db = await getMandiDB();
+  const tx = db.transaction('slips', 'readwrite');
+  const record = await tx.store.get(id);
+  if (record) {
+    record.syncStatus = 'pending';
+    record.syncError = undefined;
+    await tx.store.put(record);
+  }
+  await tx.done;
+}
+
+export async function resetAllRejectedSlips(): Promise<number> {
+  const db = await getMandiDB();
+  const tx = db.transaction('slips', 'readwrite');
+  const all = await tx.store.getAll();
+  let count = 0;
+  for (const record of all) {
+    if (record.syncStatus === 'rejected') {
+      record.syncStatus = 'pending';
+      record.syncError = undefined;
+      await tx.store.put(record);
+      count++;
+    }
+  }
+  await tx.done;
+  return count;
+}
+
 export async function voidSlipRecord(id: string, reason: string): Promise<LocalSlipRecord | null> {
   const db = await getMandiDB();
   const tx = db.transaction('slips', 'readwrite');

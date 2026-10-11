@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse, CalcInput } from '../_lib/types.js';
 import { verifyToken } from '../_lib/auth.js';
-import { getDb } from '../_lib/db.js';
+import { getDb, ensureSchema } from '../_lib/db.js';
 import { batchSlipsPayloadSchema } from '../_lib/schema.js';
 import { computeSlip } from '../_lib/calc.js';
 
@@ -14,6 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const sql = getDb();
+  await ensureSchema();
 
   /* -------------------------------------------------------------
    * POST: Batch Upsert Slips
@@ -97,6 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           results.push({ id: slip.id, status: 'exists' });
         }
       } catch (err: unknown) {
+        console.error(`Error inserting slip ${slip.id}:`, err);
         const errorMsg = err instanceof Error ? err.message : 'Calculation/database error';
         results.push({ id: slip.id, status: 'rejected', error: errorMsg });
       }
