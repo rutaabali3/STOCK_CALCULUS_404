@@ -3,8 +3,11 @@ import { SlipCard } from '../components/SlipCard';
 import { CalcResult } from 'shared/types';
 import { ExtrasState } from '../components/ExtrasPanel';
 import { AppSettings } from '../lib/settings';
-import { shareOrDownloadSlip, generateSlipPng, generateSlipPdf, downloadDataUrl } from '../lib/slipImage';
+import { shareOrDownloadSlip, generateSlipPng, downloadDataUrl, generateSlipPdf } from '../lib/slipImage';
 import { Share2, Download, PlusCircle, ArrowLeft, Check, FileText } from 'lucide-react';
+import { Md3Button } from '../components/md3/Md3Button';
+import { Md3SegmentedButton } from '../components/md3/Md3SegmentedButton';
+import { Md3TextField } from '../components/md3/Md3TextField';
 
 export interface SlipData {
   slipCode: string;
@@ -32,12 +35,11 @@ export const SlipView: React.FC<SlipViewProps> = ({
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [currentWidthMm, setCurrentWidthMm] = useState<58 | 80 | 90>(settings.slipWidthMm);
-
-  // Default filename incorporating receipt name if provided, or slip code
-  const initialFileName = slipData.extras.receiptName?.trim()
-    ? `${slipData.extras.receiptName.trim()}-${slipData.slipCode}`
-    : `mandi-slip-${slipData.slipCode}`;
-  const [customFileName, setCustomFileName] = useState(initialFileName);
+  const [customFileName, setCustomFileName] = useState<string>(
+    slipData.extras.receiptName?.trim()
+      ? `${slipData.extras.receiptName.trim()}-${slipData.slipCode}`
+      : `mandi-slip-${slipData.slipCode}`
+  );
 
   const showToast = (msg: string) => {
     setSuccessMsg(msg);
@@ -48,7 +50,7 @@ export const SlipView: React.FC<SlipViewProps> = ({
     if (!cardRef.current) return;
     setLoading(true);
     try {
-      const res = await shareOrDownloadSlip(cardRef.current, slipData.slipCode, customFileName);
+      const res = await shareOrDownloadSlip(cardRef.current, slipData.slipCode);
       if (res.method === 'shared') {
         showToast('Slip shared successfully');
       } else {
@@ -91,63 +93,50 @@ export const SlipView: React.FC<SlipViewProps> = ({
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto min-h-screen p-4 pb-12 flex flex-col justify-between space-y-6">
-      {/* Header Bar */}
-      <div className="flex items-center justify-between pb-2 border-b border-moss/20">
-        <div className="flex items-center gap-2">
+    <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Top Header Bar */}
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-md-outline-variant/20 gap-3">
+        <div className="flex items-center gap-3">
           {onBackToWeighing && (
             <button
               type="button"
               onClick={onBackToWeighing}
-              className="p-1 text-mist hover:text-forest transition-colors"
+              className="p-2 -ml-2 rounded-full text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-on-surface/[0.08] transition-colors"
               aria-label="Back to current weighing"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
-          <h1 className="text-lg font-black text-forest">Weighment Slip</h1>
+          <div>
+            <h1 className="text-2xl font-black text-md-on-surface tracking-tight">
+              Weighment Slip
+            </h1>
+            <p className="text-xs text-md-on-surface-variant font-medium mt-0.5">
+              Code: #{slipData.slipCode}
+            </p>
+          </div>
         </div>
 
-        {/* Width Toggle (58mm vs 80mm vs 90mm) */}
-        <div className="flex bg-white rounded-lg p-0.5 border border-moss/20 text-xs font-bold">
-          <button
-            type="button"
-            onClick={() => setCurrentWidthMm(58)}
-            className={`px-2 py-1 rounded-md transition-all ${
-              currentWidthMm === 58
-                ? 'bg-forest text-white shadow-sm'
-                : 'text-mist hover:text-ink'
-            }`}
-          >
-            58 mm
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrentWidthMm(80)}
-            className={`px-2 py-1 rounded-md transition-all ${
-              currentWidthMm === 80
-                ? 'bg-forest text-white shadow-sm'
-                : 'text-mist hover:text-ink'
-            }`}
-          >
-            80 mm
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrentWidthMm(90)}
-            className={`px-2 py-1 rounded-md transition-all ${
-              currentWidthMm === 90
-                ? 'bg-forest text-white shadow-sm'
-                : 'text-mist hover:text-ink'
-            }`}
-          >
-            90 mm
-          </button>
+        {/* Width Toggle */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <span className="text-xs font-bold uppercase tracking-wider text-md-on-surface-variant hidden md:inline">
+            Print Width:
+          </span>
+          <Md3SegmentedButton<58 | 80 | 90>
+            size="sm"
+            value={currentWidthMm}
+            onChange={setCurrentWidthMm}
+            options={[
+              { value: 58, label: '58 mm' },
+              { value: 80, label: '80 mm' },
+              { value: 90, label: '90 mm' },
+            ]}
+          />
         </div>
-      </div>
+      </header>
 
-      {/* Rendered Slip Card preview */}
-      <div className="overflow-x-auto py-2 flex justify-center">
+      {/* Rendered Slip Card preview on MD3 Stage */}
+      <div className="bg-md-surface-container-low rounded-3xl p-4 sm:p-6 border border-md-outline-variant/20 overflow-x-auto flex justify-center shadow-inner">
         <SlipCard
           ref={cardRef}
           slipCode={slipData.slipCode}
@@ -163,75 +152,68 @@ export const SlipView: React.FC<SlipViewProps> = ({
         />
       </div>
 
-      {/* Success Notification */}
-      {successMsg && (
-        <div className="fixed bottom-28 left-4 right-4 max-w-md mx-auto bg-forest text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-2 z-50 text-sm font-semibold animate-fade-in">
-          <Check className="w-4 h-4 text-wheat" />
-          <span>{successMsg}</span>
-        </div>
-      )}
+      {/* Action Controls Section */}
+      <div className="space-y-4 max-w-xl mx-auto">
+        {/* Custom File / Receipt Name */}
+        <Md3TextField
+          label="Custom File / Slip Name"
+          value={customFileName}
+          onChange={(e) => setCustomFileName(e.target.value)}
+          placeholder={`mandi-slip-${slipData.slipCode}`}
+        />
 
-      {/* Action Buttons Panel */}
-      <div className="sticky bottom-0 bg-cream/95 backdrop-blur-md pt-2 space-y-2.5">
-        {/* Optional Custom File / Receipt Name */}
-        <div className="bg-white p-2.5 rounded-xl border border-moss/20">
-          <label className="block text-[11px] font-bold text-mist uppercase tracking-wider mb-1">
-            File / Receipt Name
-          </label>
-          <input
-            type="text"
-            value={customFileName}
-            onChange={(e) => setCustomFileName(e.target.value)}
-            placeholder={`mandi-slip-${slipData.slipCode}`}
-            className="w-full h-9 px-2.5 text-xs bg-cream/30 border border-moss/20 rounded-lg focus:border-forest focus:outline-none font-semibold text-ink"
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          {/* Share Button */}
-          <button
-            type="button"
+        {/* Action Buttons Row */}
+        <div className="grid grid-cols-3 gap-3">
+          <Md3Button
+            variant="filled"
+            size="md"
             onClick={handleShare}
             disabled={loading}
-            className="h-12 bg-wheat hover:bg-wheat/90 active:scale-[0.98] text-forest font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-md transition-all disabled:opacity-50"
+            icon={<Share2 className="w-4 h-4" />}
           >
-            <Share2 className="w-4 h-4 stroke-[2.5]" />
-            <span>{loading ? '...' : 'Share'}</span>
-          </button>
+            {loading ? '...' : 'Share'}
+          </Md3Button>
 
-          {/* Download Image (PNG) */}
-          <button
-            type="button"
+          <Md3Button
+            variant="tonal"
+            size="md"
             onClick={handleDownloadImage}
             disabled={loading}
-            className="h-12 bg-white hover:bg-cream/40 border border-moss/30 active:scale-[0.98] text-forest font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
+            icon={<Download className="w-4 h-4" />}
           >
-            <Download className="w-4 h-4 stroke-[2.5]" />
-            <span>PNG Image</span>
-          </button>
+            PNG
+          </Md3Button>
 
-          {/* Download PDF */}
-          <button
-            type="button"
+          <Md3Button
+            variant="tonal"
+            size="md"
             onClick={handleDownloadPdf}
             disabled={loading}
-            className="h-12 bg-white hover:bg-cream/40 border border-moss/30 active:scale-[0.98] text-forest font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
+            icon={<FileText className="w-4 h-4" />}
           >
-            <FileText className="w-4 h-4 text-forest stroke-[2.5]" />
-            <span>PDF File</span>
-          </button>
+            PDF
+          </Md3Button>
         </div>
 
         {/* Start New Weighing */}
-        <button
-          type="button"
+        <Md3Button
+          variant="elevated"
+          size="lg"
           onClick={onNewWeighing}
-          className="w-full h-12 bg-forest hover:bg-forest/90 active:scale-[0.98] text-white font-bold text-base rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all"
+          icon={<PlusCircle className="w-5 h-5 text-md-primary" />}
+          className="w-full h-14 font-bold text-base shadow-md-2"
         >
-          <PlusCircle className="w-5 h-5 text-wheat" />
-          <span>Start New Weighing</span>
-        </button>
+          Start New Weighing
+        </Md3Button>
       </div>
+
+      {/* MD3 Success Notification Snackbar */}
+      {successMsg && (
+        <div className="fixed bottom-24 md:bottom-8 right-4 left-4 md:left-auto md:w-96 bg-md-inverse-surface text-md-inverse-on-surface px-5 py-3 rounded-2xl shadow-md-3 flex items-center justify-center gap-2 z-50 text-sm font-semibold animate-fade-in border border-white/10">
+          <Check className="w-4 h-4 text-md-inverse-primary" />
+          <span>{successMsg}</span>
+        </div>
+      )}
     </div>
   );
 };

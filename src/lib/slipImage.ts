@@ -5,6 +5,7 @@ import { jsPDF } from 'jspdf';
  * Sanitizes a string for safe filesystem filename.
  */
 export function sanitizeFilename(name: string): string {
+  // eslint-disable-next-line no-control-regex
   return name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').trim();
 }
 

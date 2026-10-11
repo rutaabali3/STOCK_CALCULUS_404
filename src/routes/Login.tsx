@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { getMandiDB } from '../lib/db';
 import { Lock, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Md3Button } from '../components/md3/Md3Button';
+import { Md3Card } from '../components/md3/Md3Card';
 
 interface LoginProps {
   onSuccess: () => void;
@@ -49,59 +51,72 @@ export const Login: React.FC<LoginProps> = ({ onSuccess, onCancel }) => {
 
   return (
     <div className="w-full max-w-sm mx-auto min-h-screen p-4 flex flex-col justify-center space-y-6">
-      <div className="text-center space-y-2">
-        <div className="w-14 h-14 bg-forest text-wheat rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-          <Lock className="w-7 h-7" />
+      <div className="text-center space-y-3">
+        <div className="w-16 h-16 bg-md-primary-container text-md-on-primary-container rounded-3xl flex items-center justify-center mx-auto shadow-md-1">
+          <Lock className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-black text-forest">Unlock Online Sync</h1>
-        <p className="text-xs text-mist">
+        <h1 className="text-2xl font-black text-md-on-surface tracking-tight">
+          Unlock Online Sync
+        </h1>
+        <p className="text-xs text-md-on-surface-variant leading-relaxed">
           Enter your shop PIN to connect to the cloud database and sync your weighment records.
         </p>
       </div>
 
-      <form onSubmit={handleUnlock} className="space-y-4 bg-white p-5 rounded-2xl border border-moss/20 shadow-md">
-        <div>
-          <label className="block text-xs font-bold text-mist uppercase tracking-wider mb-1.5">
-            Security PIN
-          </label>
-          <input
-            type="password"
-            autoFocus
-            inputMode="numeric"
-            placeholder="••••••••"
-            value={pin}
-            onChange={(e) => {
-              setPin(e.target.value);
-              if (error) setError(null);
-            }}
-            className="w-full h-12 px-4 text-center tracking-widest text-xl font-black bg-cream/40 border-2 border-moss/30 rounded-xl focus:border-forest focus:outline-none"
-          />
-        </div>
+      <Md3Card variant="elevated" rounded="3xl" className="p-6 space-y-5">
+        <form onSubmit={handleUnlock} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-md-on-surface-variant text-center">
+              Security PIN
+            </label>
+            <div className="bg-md-surface-container-lowest border-2 border-md-outline-variant focus-within:border-md-primary rounded-2xl transition-all shadow-xs">
+              <input
+                type="password"
+                autoFocus
+                inputMode="numeric"
+                placeholder="••••••••"
+                value={pin}
+                onChange={(e) => {
+                  setPin(e.target.value);
+                  if (error) setError(null);
+                }}
+                className="w-full h-14 px-4 text-center tracking-widest text-2xl font-black bg-transparent text-md-on-surface focus:outline-none"
+              />
+            </div>
+          </div>
 
-        {error && (
-          <p className="text-xs text-red-600 font-semibold text-center">{error}</p>
-        )}
+          {error && (
+            <p className="text-xs text-md-error font-semibold text-center px-2 py-1 bg-md-error-container/30 rounded-lg">
+              {error}
+            </p>
+          )}
 
-        <button
-          type="submit"
-          disabled={loading || !pin.trim()}
-          className="w-full h-12 bg-forest hover:bg-forest/90 active:scale-[0.98] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-50"
-        >
-          <span>{loading ? 'Unlocking...' : 'Connect to Shop'}</span>
-          <ArrowRight className="w-4 h-4 text-wheat" />
-        </button>
-
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full py-2 text-xs font-bold text-mist hover:text-ink flex items-center justify-center gap-1"
+          <Md3Button
+            type="submit"
+            variant="filled"
+            size="lg"
+            loading={loading}
+            disabled={!pin.trim()}
+            trailingIcon={<ArrowRight className="w-4 h-4 ml-1" />}
+            className="w-full h-13 font-bold"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Continue Offline</span>
-          </button>
-        )}
-      </form>
+            Connect to Shop
+          </Md3Button>
+
+          {onCancel && (
+            <Md3Button
+              type="button"
+              variant="text"
+              size="sm"
+              onClick={onCancel}
+              icon={<ArrowLeft className="w-3.5 h-3.5" />}
+              className="w-full text-xs text-md-on-surface-variant hover:text-md-on-surface"
+            >
+              Continue Offline
+            </Md3Button>
+          )}
+        </form>
+      </Md3Card>
     </div>
   );
 };

@@ -5,16 +5,120 @@
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* MD3 Light Theme Tokens (Mandi Agricultural Botanical Scheme) */
+  --md-sys-color-primary: #1b6c43;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #a3f5be;
+  --md-sys-color-on-primary-container: #00210f;
+
+  --md-sys-color-secondary: #506352;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #d3e8d3;
+  --md-sys-color-on-secondary-container: #0e1f12;
+
+  --md-sys-color-tertiary: #7c5800;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #ffdea3;
+  --md-sys-color-on-tertiary-container: #261900;
+
+  --md-sys-color-error: #ba1a1a;
+  --md-sys-color-on-error: #ffffff;
+  --md-sys-color-error-container: #ffdad6;
+  --md-sys-color-on-error-container: #410002;
+
+  --md-sys-color-surface: #f8faf5;
+  --md-sys-color-surface-dim: #d8dcd5;
+  --md-sys-color-surface-bright: #f8faf5;
+  --md-sys-color-surface-container-lowest: #ffffff;
+  --md-sys-color-surface-container-low: #f2f5ef;
+  --md-sys-color-surface-container: #ecefe9;
+  --md-sys-color-surface-container-high: #e6e9e3;
+  --md-sys-color-surface-container-highest: #e0e4dd;
+
+  --md-sys-color-on-surface: #191d19;
+  --md-sys-color-on-surface-variant: #424941;
+  --md-sys-color-outline: #727971;
+  --md-sys-color-outline-variant: #c1c9bf;
+
+  --md-sys-color-inverse-surface: #2e312d;
+  --md-sys-color-inverse-on-surface: #f0f2eb;
+  --md-sys-color-inverse-primary: #88d8a3;
+}
+
+[data-theme='dark'] {
+  /* MD3 Dark Theme Tokens */
+  --md-sys-color-primary: #88d8a3;
+  --md-sys-color-on-primary: #00391f;
+  --md-sys-color-primary-container: #00522f;
+  --md-sys-color-on-primary-container: #a3f5be;
+
+  --md-sys-color-secondary: #b7ccb8;
+  --md-sys-color-on-secondary: #223526;
+  --md-sys-color-secondary-container: #394b3b;
+  --md-sys-color-on-secondary-container: #d3e8d3;
+
+  --md-sys-color-tertiary: #f6be48;
+  --md-sys-color-on-tertiary: #412d00;
+  --md-sys-color-tertiary-container: #5d4200;
+  --md-sys-color-on-tertiary-container: #ffdea3;
+
+  --md-sys-color-error: #ffb4ab;
+  --md-sys-color-on-error: #690005;
+  --md-sys-color-error-container: #93000a;
+  --md-sys-color-on-error-container: #ffdad6;
+
+  --md-sys-color-surface: #111412;
+  --md-sys-color-surface-dim: #111412;
+  --md-sys-color-surface-bright: #373b37;
+  --md-sys-color-surface-container-lowest: #0b0f0d;
+  --md-sys-color-surface-container-low: #191d19;
+  --md-sys-color-surface-container: #1d211d;
+  --md-sys-color-surface-container-high: #272b27;
+  --md-sys-color-surface-container-highest: #323632;
+
+  --md-sys-color-on-surface: #e0e4dd;
+  --md-sys-color-on-surface-variant: #c1c9bf;
+  --md-sys-color-outline: #8b938a;
+  --md-sys-color-outline-variant: #424941;
+
+  --md-sys-color-inverse-surface: #e0e4dd;
+  --md-sys-color-inverse-on-surface: #2e312d;
+  --md-sys-color-inverse-primary: #1b6c43;
 }
 
 body {
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
-/* Ensure touch targets meet 48px minimum guidelines */
+/* Touch targets and interactions */
 button, input, select {
   touch-action: manipulation;
+}
+
+/* Custom MD3 subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-sys-color-outline);
 }

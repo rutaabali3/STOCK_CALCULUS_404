@@ -8,7 +8,8 @@ import { computeSlip } from 'shared/calc';
 import { parseDecimal, formatDecimal } from 'shared/decimal';
 import { CalcInput, CalcResult } from 'shared/types';
 import { AppSettings } from '../lib/settings';
-import { RotateCcw, FileText } from 'lucide-react';
+import { RotateCcw, FileText, ArrowRight } from 'lucide-react';
+import { Md3Button } from '../components/md3/Md3Button';
 
 interface WeighProps {
   settings: AppSettings;
@@ -191,95 +192,107 @@ export const Weigh: React.FC<WeighProps> = ({ settings, onSaveSlip }) => {
   const canSave = Boolean(calcResult && !calcError && weightsG.length > 0);
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-screen flex flex-col justify-between p-4 pb-8 space-y-4">
-      {/* Top section: Header & Weight input */}
-      <div className="space-y-4">
-        <header className="flex items-center justify-between pb-2 border-b border-moss/20">
-          <div>
-            <h1 className="text-xl font-black text-forest tracking-tight">
-              Mandi Weighment
-            </h1>
-            <p className="text-xs text-mist font-medium">{settings.shopName}</p>
-          </div>
+    <div className="w-full max-w-6xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Top App Bar / Header */}
+      <header className="flex items-center justify-between pb-4 border-b border-md-outline-variant/20">
+        <div>
+          <h1 className="text-2xl font-black text-md-on-surface tracking-tight">
+            Mandi Weighment
+          </h1>
+          <p className="text-xs text-md-on-surface-variant font-medium mt-0.5">
+            {settings.shopName}
+          </p>
+        </div>
+        <div className="md:hidden">
           <SyncBadge />
-        </header>
+        </div>
+      </header>
 
-        <WeightInput onAddWeight={handleAddWeight} />
+      {/* Responsive 2-Column Grid on Tablet & Desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Input, Bag Stream, Extras */}
+        <div className="lg:col-span-7 space-y-5">
+          <WeightInput onAddWeight={handleAddWeight} />
 
-        <BagChips
-          weightsG={weightsG}
-          onRemoveIndex={handleRemoveIndex}
-          onUndoLast={handleUndoLast}
-          canUndo={removedHistory.length > 0}
-        />
+          <BagChips
+            weightsG={weightsG}
+            onRemoveIndex={handleRemoveIndex}
+            onUndoLast={handleUndoLast}
+            canUndo={removedHistory.length > 0}
+          />
 
-        <ExtrasPanel
-          extras={extras}
-          onChange={(upd) => setExtras((prev) => ({ ...prev, ...upd }))}
-          chargeMode={settings.chargeMode}
-        />
+          <ExtrasPanel
+            extras={extras}
+            onChange={(upd) => setExtras((prev) => ({ ...prev, ...upd }))}
+            chargeMode={settings.chargeMode}
+          />
+        </div>
+
+        {/* Right Column: Totals Bar, Errors & Action Buttons */}
+        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-6">
+          <TotalsBar
+            result={calcResult}
+            rateStr={rateStr}
+            onRateChange={setRateStr}
+            hasTare={Boolean(extras.tareKgStr.trim() && parseDecimal(extras.tareKgStr, 3))}
+            roundToRupee={settings.roundToRupee}
+          />
+
+          {calcError && (
+            <p className="text-xs text-md-error font-bold text-center px-2 py-1 bg-md-error-container/40 rounded-lg">
+              {calcError}
+            </p>
+          )}
+
+          <div className="flex items-center gap-3 pt-2">
+            {/* Reset Button (2-tap confirm) */}
+            <button
+              type="button"
+              onClick={handleResetClick}
+              disabled={weightsG.length === 0}
+              className={`h-13 px-5 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-all shrink-0 cursor-pointer select-none border ${
+                resetConfirming
+                  ? 'bg-md-error text-md-on-error border-transparent shadow-md-2 animate-pulse'
+                  : 'bg-md-surface-container-low text-md-on-surface-variant border-md-outline-variant hover:text-md-error hover:border-md-error/50 disabled:opacity-40 disabled:cursor-not-allowed'
+              }`}
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>{resetConfirming ? 'Tap to Confirm' : 'Reset'}</span>
+            </button>
+
+            {/* Save & Show Slip Button */}
+            <Md3Button
+              variant="filled"
+              size="lg"
+              disabled={!canSave}
+              onClick={() => {
+                if (canSave && calcResult && onSaveSlip) {
+                  onSaveSlip(calcResult, weightsG, extras, rateStr);
+                }
+              }}
+              icon={<FileText className="w-5 h-5 text-md-tertiary" />}
+              trailingIcon={<ArrowRight className="w-4 h-4 ml-1" />}
+              className="flex-1 h-13 shadow-md-2 hover:shadow-md-3"
+            >
+              Save & Show Slip
+            </Md3Button>
+          </div>
+        </div>
       </div>
 
-      {/* Undo Toast */}
+      {/* MD3 Undo Snackbar */}
       {undoToast.show && (
-        <div className="fixed bottom-36 left-4 right-4 max-w-md mx-auto bg-ink text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-between z-50 animate-fade-in text-sm font-medium">
+        <div className="fixed bottom-24 md:bottom-8 right-4 left-4 md:left-auto md:w-96 bg-md-inverse-surface text-md-inverse-on-surface px-4 py-3 rounded-2xl shadow-md-3 flex items-center justify-between z-50 animate-fade-in text-sm font-medium border border-white/10">
           <span>{undoToast.message}</span>
           <button
             type="button"
             onClick={handleUndoLast}
-            className="text-wheat font-bold hover:underline px-2 py-0.5"
+            className="text-md-inverse-primary font-bold hover:bg-white/10 px-3 py-1 rounded-full cursor-pointer transition-colors"
           >
             Undo
           </button>
         </div>
       )}
-
-      {/* Sticky Bottom Section: Totals & Action Buttons */}
-      <div className="sticky bottom-0 bg-cream/95 backdrop-blur-md pt-2 space-y-3 z-20">
-        <TotalsBar
-          result={calcResult}
-          rateStr={rateStr}
-          onRateChange={setRateStr}
-          hasTare={Boolean(extras.tareKgStr.trim() && parseDecimal(extras.tareKgStr, 3))}
-          roundToRupee={settings.roundToRupee}
-        />
-
-        {calcError && (
-          <p className="text-xs text-red-600 font-semibold text-center">{calcError}</p>
-        )}
-
-        <div className="flex items-center gap-2">
-          {/* Reset Button (2-tap confirm) */}
-          <button
-            type="button"
-            onClick={handleResetClick}
-            disabled={weightsG.length === 0}
-            className={`h-12 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm shrink-0 border ${
-              resetConfirming
-                ? 'bg-red-600 text-white border-red-700 animate-pulse'
-                : 'bg-white text-mist border-moss/20 hover:text-red-600 disabled:opacity-40'
-            }`}
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>{resetConfirming ? 'Tap to Confirm' : 'Reset'}</span>
-          </button>
-
-          {/* Save & Show Slip Button */}
-          <button
-            type="button"
-            disabled={!canSave}
-            onClick={() => {
-              if (canSave && calcResult && onSaveSlip) {
-                onSaveSlip(calcResult, weightsG, extras, rateStr);
-              }
-            }}
-            className="flex-1 h-12 bg-forest hover:bg-forest/90 active:scale-[0.99] text-white font-bold text-base rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all disabled:opacity-40 disabled:pointer-events-none"
-          >
-            <FileText className="w-5 h-5 text-wheat" />
-            <span>Save & Show Slip</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

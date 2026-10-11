@@ -13,8 +13,8 @@ export const SyncBadge: React.FC = () => {
 
   if (state.isSyncing) {
     return (
-      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-wheat/20 border border-wheat/40 rounded-full text-xs font-bold text-forest">
-        <RefreshCw className="w-3.5 h-3.5 animate-spin text-wheat" />
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-md-tertiary-container text-md-on-tertiary-container rounded-full text-xs font-semibold select-none shadow-sm animate-pulse">
+        <RefreshCw className="w-3.5 h-3.5 animate-spin text-current" />
         <span>Syncing...</span>
       </div>
     );
@@ -22,38 +22,41 @@ export const SyncBadge: React.FC = () => {
 
   if (state.lastError) {
     return (
-      <div
+      <button
+        type="button"
         title={state.lastError}
-        className="flex items-center gap-1.5 px-2.5 py-1 bg-red-100 border border-red-300 rounded-full text-xs font-bold text-red-700 cursor-pointer"
+        className="inline-flex items-center gap-1.5 px-3 py-1 bg-md-error-container text-md-on-error-container rounded-full text-xs font-semibold cursor-pointer hover:opacity-90 active:scale-95 transition-all shadow-sm focus:outline-none"
         onClick={() => syncWorker.triggerSync()}
       >
-        <AlertCircle className="w-3.5 h-3.5 text-red-600" />
+        <AlertCircle className="w-3.5 h-3.5 text-current" />
         <span>Sync Error</span>
-      </div>
+      </button>
     );
   }
 
   if (state.pendingCount > 0) {
     return (
-      <div
-        className="flex items-center gap-1.5 px-2.5 py-1 bg-cream border border-moss/30 rounded-full text-xs font-bold text-forest cursor-pointer hover:bg-cream/60"
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 px-3 py-1 bg-md-surface-container-high border border-md-outline-variant/60 text-md-on-surface rounded-full text-xs font-semibold cursor-pointer hover:bg-md-surface-container-highest active:scale-95 transition-all focus:outline-none"
         onClick={() => syncWorker.triggerSync()}
         title="Tap to sync pending slips"
       >
-        <CloudOff className="w-3.5 h-3.5 text-mist" />
+        <CloudOff className="w-3.5 h-3.5 text-md-on-surface-variant" />
         <span>{state.pendingCount} Pending</span>
-      </div>
+      </button>
     );
   }
 
   return (
-    <div
-      className="flex items-center gap-1.5 px-2.5 py-1 bg-moss/10 border border-moss/30 rounded-full text-xs font-bold text-moss cursor-pointer"
+    <button
+      type="button"
+      className="inline-flex items-center gap-1.5 px-3 py-1 bg-md-primary-container text-md-on-primary-container rounded-full text-xs font-semibold cursor-pointer hover:opacity-90 active:scale-95 transition-all focus:outline-none"
       onClick={() => syncWorker.triggerSync()}
-      title="All slips synced to server"
+      title="All slips synced to server (tap to refresh)"
     >
-      <Cloud className="w-3.5 h-3.5" />
+      <Cloud className="w-3.5 h-3.5 text-current" />
       <span>Synced</span>
-    </div>
+    </button>
   );
 };

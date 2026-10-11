@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Share, X } from 'lucide-react';
+import { Md3Button } from './md3/Md3Button';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -66,23 +67,24 @@ export const InstallPrompt: React.FC = () => {
   // Android / Desktop native install banner
   if (deferredPrompt) {
     return (
-      <div className="bg-forest text-cream px-4 py-2.5 flex items-center justify-between text-xs font-semibold shadow-md border-b border-moss/40">
-        <div className="flex items-center gap-2">
-          <Download className="w-4 h-4 text-wheat shrink-0" />
-          <span>Install Mandi App on your phone for instant offline access</span>
+      <div className="bg-md-surface-container-high text-md-on-surface px-4 py-2.5 flex items-center justify-between text-xs font-semibold shadow-sm border-b border-md-outline-variant/30">
+        <div className="flex items-center gap-2.5">
+          <Download className="w-4 h-4 text-md-primary shrink-0" />
+          <span>Install Mandi App for faster, instant offline access</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Md3Button
+            variant="filled"
+            size="sm"
             onClick={handleInstallClick}
-            className="px-3 py-1 bg-wheat text-forest font-bold rounded-lg hover:bg-wheat/90 active:scale-95 transition-all"
+            className="!h-8 !px-3 !text-xs"
           >
             Install
-          </button>
+          </Md3Button>
           <button
             type="button"
             onClick={handleDismiss}
-            className="p-1 text-cream/70 hover:text-white"
+            className="p-1 rounded-full text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-on-surface/[0.08]"
             aria-label="Dismiss banner"
           >
             <X className="w-4 h-4" />
@@ -95,17 +97,17 @@ export const InstallPrompt: React.FC = () => {
   // iOS Safari "Add to Home Screen" guide banner
   if (showIosPrompt) {
     return (
-      <div className="bg-forest text-cream px-4 py-2.5 flex items-center justify-between text-xs font-medium shadow-md border-b border-moss/40">
-        <div className="flex items-center gap-2">
-          <Share className="w-4 h-4 text-wheat shrink-0" />
+      <div className="bg-md-surface-container-high text-md-on-surface px-4 py-2.5 flex items-center justify-between text-xs font-medium shadow-sm border-b border-md-outline-variant/30">
+        <div className="flex items-center gap-2.5">
+          <Share className="w-4 h-4 text-md-primary shrink-0" />
           <span>
-            Install on iPhone: Tap <strong className="text-white">Share</strong> then <strong className="text-white">Add to Home Screen</strong>
+            Install on iPhone: Tap <strong className="font-bold text-md-primary">Share</strong> then <strong className="font-bold text-md-primary">Add to Home Screen</strong>
           </span>
         </div>
         <button
           type="button"
           onClick={handleDismiss}
-          className="p-1 text-cream/70 hover:text-white"
+          className="p-1 rounded-full text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-on-surface/[0.08]"
           aria-label="Dismiss iOS guide banner"
         >
           <X className="w-4 h-4" />

@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { AppSettings } from '../lib/settings';
+import { AppSettings, ThemeMode } from '../lib/settings';
 import { exportBackupData, importBackupData, BackupData, getOrCreateDeviceId } from '../lib/db';
 import { formatDecimal, parseDecimal } from 'shared/decimal';
-import { Download, Upload, ArrowLeft, Check, ShieldCheck } from 'lucide-react';
+import { Download, Upload, ArrowLeft, Check, ShieldCheck, Sun, Moon, Monitor } from 'lucide-react';
+import { Md3Button } from '../components/md3/Md3Button';
+import { Md3Card } from '../components/md3/Md3Card';
+import { Md3TextField } from '../components/md3/Md3TextField';
+import { Md3SegmentedButton } from '../components/md3/Md3SegmentedButton';
+import { Md3Switch } from '../components/md3/Md3Switch';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -23,6 +28,7 @@ export const Settings: React.FC<SettingsProps> = ({
   const [chargeMode, setChargeMode] = useState(settings.chargeMode);
   const [roundToRupee, setRoundToRupee] = useState(settings.roundToRupee);
   const [slipWidthMm, setSlipWidthMm] = useState<58 | 80 | 90>(settings.slipWidthMm);
+  const [theme, setTheme] = useState<ThemeMode>(settings.theme || 'system');
 
   const [toast, setToast] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -44,6 +50,7 @@ export const Settings: React.FC<SettingsProps> = ({
       chargeMode,
       roundToRupee,
       slipWidthMm,
+      theme,
     };
 
     onUpdateSettings(updated);
@@ -88,181 +95,177 @@ export const Settings: React.FC<SettingsProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-screen p-4 pb-12 flex flex-col justify-between space-y-6">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-2 border-b border-moss/20">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onBack}
-              className="p-1 text-mist hover:text-forest transition-colors"
-              aria-label="Back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-black text-forest">Settings</h1>
-          </div>
-
+    <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Top Bar Header */}
+      <header className="flex items-center justify-between pb-4 border-b border-md-outline-variant/20">
+        <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={handleSave}
-            className="px-4 py-1.5 bg-forest text-white rounded-lg text-xs font-bold shadow-sm hover:bg-forest/90"
+            onClick={onBack}
+            className="p-2 -ml-2 rounded-full text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-on-surface/[0.08] transition-colors"
+            aria-label="Back"
           >
-            Save
+            <ArrowLeft className="w-5 h-5" />
           </button>
+          <h1 className="text-2xl font-black text-md-on-surface tracking-tight">
+            Settings
+          </h1>
         </div>
 
-        {/* Shop Name */}
-        <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-mist uppercase tracking-wider">
-            Shop Title (Printed on Slip)
-          </label>
-          <input
-            type="text"
+        <Md3Button
+          variant="filled"
+          size="sm"
+          onClick={handleSave}
+          icon={<Check className="w-4 h-4" />}
+        >
+          Save Changes
+        </Md3Button>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Card 1: Shop & Calculations */}
+        <Md3Card variant="elevated" className="p-5 space-y-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
+            Shop Information & Rates
+          </h2>
+
+          <Md3TextField
+            label="Shop Title (Printed on Slip)"
             value={shopName}
             onChange={(e) => setShopName(e.target.value)}
-            className="w-full h-12 px-3 text-sm bg-white border border-moss/30 rounded-xl focus:border-forest focus:outline-none font-semibold text-ink"
           />
-        </div>
 
-        {/* Default Rate & Tare */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="block text-xs font-bold text-mist uppercase tracking-wider">
-              Default Rate (Rs)
-            </label>
-            <input
-              type="text"
+          <div className="grid grid-cols-2 gap-3">
+            <Md3TextField
+              label="Default Rate (Rs)"
               inputMode="decimal"
               value={rateStr}
               onChange={(e) => setRateStr(e.target.value)}
-              className="w-full h-12 px-3 text-sm bg-white border border-moss/30 rounded-xl focus:border-forest focus:outline-none tabular-nums font-semibold"
             />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-xs font-bold text-mist uppercase tracking-wider">
-              Default Tare (kg)
-            </label>
-            <input
-              type="text"
+            <Md3TextField
+              label="Default Tare (kg)"
               inputMode="decimal"
               placeholder="0"
               value={tareStr}
               onChange={(e) => setTareStr(e.target.value)}
-              className="w-full h-12 px-3 text-sm bg-white border border-moss/30 rounded-xl focus:border-forest focus:outline-none tabular-nums font-semibold"
             />
           </div>
-        </div>
 
-        {/* Charge Mode */}
-        <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-mist uppercase tracking-wider">
-            Commission & Labour Calculation
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setChargeMode('add')}
-              className={`h-11 rounded-xl text-xs font-bold border transition-all ${
-                chargeMode === 'add'
-                  ? 'bg-forest text-white border-forest'
-                  : 'bg-white text-mist border-moss/20 hover:border-moss'
-              }`}
-            >
-              Add to Bill (Buyer)
-            </button>
-            <button
-              type="button"
-              onClick={() => setChargeMode('deduct')}
-              className={`h-11 rounded-xl text-xs font-bold border transition-all ${
-                chargeMode === 'deduct'
-                  ? 'bg-forest text-white border-forest'
-                  : 'bg-white text-mist border-moss/20 hover:border-moss'
-              }`}
-            >
-              Deduct (Seller)
-            </button>
-          </div>
-        </div>
-
-        {/* Rounding & Slip Width */}
-        <div className="space-y-3 bg-white p-4 rounded-xl border border-moss/20">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pt-2 border-t border-md-outline-variant/20">
             <div>
-              <span className="block text-sm font-bold text-forest">Round Total to Rupee</span>
-              <span className="text-xs text-mist">Rounds final payment to nearest whole rupee</span>
+              <span className="block text-sm font-bold text-md-on-surface">
+                Round Total to Rupee
+              </span>
+              <span className="text-xs text-md-on-surface-variant">
+                Rounds final bill to whole rupee
+              </span>
             </div>
-            <input
-              type="checkbox"
+            <Md3Switch
               checked={roundToRupee}
-              onChange={(e) => setRoundToRupee(e.target.checked)}
-              className="w-5 h-5 accent-forest rounded"
+              onChange={setRoundToRupee}
+              ariaLabel="Round total to rupee"
+            />
+          </div>
+        </Md3Card>
+
+        {/* Card 2: Calculation & Slip Modes */}
+        <Md3Card variant="elevated" className="p-5 space-y-5">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
+            Billing & Print Dimensions
+          </h2>
+
+          <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-md-on-surface-variant">
+              Commission & Mazdoori Mode
+            </label>
+            <Md3SegmentedButton<'add' | 'deduct'>
+              value={chargeMode}
+              onChange={setChargeMode}
+              className="w-full justify-center"
+              options={[
+                { value: 'add', label: 'Add to Bill (Buyer)' },
+                { value: 'deduct', label: 'Deduct (Seller)' },
+              ]}
             />
           </div>
 
-          <div className="border-t border-moss/10 pt-3 flex items-center justify-between">
-            <div>
-              <span className="block text-sm font-bold text-forest">Default Slip Width</span>
-              <span className="text-xs text-mist">Standard image / thermal print width</span>
-            </div>
-            <div className="flex bg-cream rounded-lg p-0.5 border border-moss/20 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setSlipWidthMm(58)}
-                className={`px-2.5 py-1 rounded-md ${
-                  slipWidthMm === 58 ? 'bg-forest text-white' : 'text-mist'
-                }`}
-              >
-                58 mm
-              </button>
-              <button
-                type="button"
-                onClick={() => setSlipWidthMm(80)}
-                className={`px-2.5 py-1 rounded-md ${
-                  slipWidthMm === 80 ? 'bg-forest text-white' : 'text-mist'
-                }`}
-              >
-                80 mm
-              </button>
-              <button
-                type="button"
-                onClick={() => setSlipWidthMm(90)}
-                className={`px-2.5 py-1 rounded-md ${
-                  slipWidthMm === 90 ? 'bg-forest text-white' : 'text-mist'
-                }`}
-              >
-                90 mm
-              </button>
-            </div>
+          <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-md-on-surface-variant">
+              Thermal Print Slip Width
+            </label>
+            <Md3SegmentedButton<58 | 80 | 90>
+              value={slipWidthMm}
+              onChange={setSlipWidthMm}
+              className="w-full justify-center"
+              options={[
+                { value: 58, label: '58 mm' },
+                { value: 80, label: '80 mm' },
+                { value: 90, label: '90 mm' },
+              ]}
+            />
           </div>
-        </div>
 
-        {/* Data Backup & Restore */}
-        <div className="space-y-2">
-          <span className="block text-xs font-bold text-mist uppercase tracking-wider">
+          {/* Theme Mode Selector */}
+          <div className="space-y-2 pt-2 border-t border-md-outline-variant/20">
+            <label className="block text-xs font-bold uppercase tracking-wider text-md-on-surface-variant">
+              Theme / Appearance
+            </label>
+            <Md3SegmentedButton<ThemeMode>
+              value={theme}
+              onChange={(newTheme) => {
+                setTheme(newTheme);
+                // Also trigger live preview
+                if (typeof window !== 'undefined') {
+                  const isDark =
+                    newTheme === 'dark' ||
+                    (newTheme === 'system' &&
+                      window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  if (isDark) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                  } else {
+                    document.documentElement.removeAttribute('data-theme');
+                  }
+                }
+              }}
+              className="w-full justify-center"
+              options={[
+                { value: 'system', label: 'System', icon: <Monitor className="w-3.5 h-3.5" /> },
+                { value: 'light', label: 'Light', icon: <Sun className="w-3.5 h-3.5" /> },
+                { value: 'dark', label: 'Dark', icon: <Moon className="w-3.5 h-3.5" /> },
+              ]}
+            />
+          </div>
+        </Md3Card>
+
+        {/* Card 3: Data Backup & Restore */}
+        <Md3Card variant="elevated" className="p-5 space-y-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
             Data Backup & Restore
-          </span>
+          </h2>
+          <p className="text-xs text-md-on-surface-variant leading-relaxed">
+            Export a full JSON backup of all offline weighing records, or restore from a previous backup file.
+          </p>
 
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <Md3Button
+              variant="tonal"
+              size="md"
               onClick={handleExportBackup}
-              className="h-11 bg-white hover:bg-cream border border-moss/30 rounded-xl text-xs font-bold text-forest flex items-center justify-center gap-1.5 shadow-sm"
+              icon={<Download className="w-4 h-4 text-md-tertiary" />}
+              className="w-full"
             >
-              <Download className="w-4 h-4 text-wheat" />
-              <span>Export Backup</span>
-            </button>
+              Export
+            </Md3Button>
 
-            <button
-              type="button"
+            <Md3Button
+              variant="tonal"
+              size="md"
               onClick={() => fileInputRef.current?.click()}
-              className="h-11 bg-white hover:bg-cream border border-moss/30 rounded-xl text-xs font-bold text-forest flex items-center justify-center gap-1.5 shadow-sm"
+              icon={<Upload className="w-4 h-4 text-md-primary" />}
+              className="w-full"
             >
-              <Upload className="w-4 h-4 text-moss" />
-              <span>Import Backup</span>
-            </button>
+              Import
+            </Md3Button>
             <input
               ref={fileInputRef}
               type="file"
@@ -271,28 +274,36 @@ export const Settings: React.FC<SettingsProps> = ({
               className="hidden"
             />
           </div>
-        </div>
+        </Md3Card>
 
-        {/* Device & System Info */}
-        <div className="p-3 bg-cream/40 rounded-xl border border-moss/20 text-xs space-y-1">
-          <div className="flex justify-between items-center text-mist">
-            <span>Device ID:</span>
-            <span className="font-mono text-[11px] font-bold text-ink">{deviceId}</span>
+        {/* Card 4: Device & System Info */}
+        <Md3Card variant="elevated" className="p-5 space-y-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
+            Device & Local Storage
+          </h2>
+
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between items-center py-1.5 border-b border-md-outline-variant/15 text-md-on-surface-variant">
+              <span>Device Identifier:</span>
+              <span className="font-mono text-[11px] font-bold text-md-on-surface">
+                {deviceId}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-1.5 text-md-on-surface-variant">
+              <span>Local Storage Engine:</span>
+              <span className="flex items-center gap-1.5 text-md-primary font-bold">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Persistent IndexedDB</span>
+              </span>
+            </div>
           </div>
-          <div className="flex justify-between items-center text-mist">
-            <span>Storage:</span>
-            <span className="flex items-center gap-1 text-moss font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Offline IndexedDB</span>
-            </span>
-          </div>
-        </div>
+        </Md3Card>
       </div>
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-12 left-4 right-4 max-w-md mx-auto bg-forest text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center justify-center gap-2 z-50 text-sm font-semibold animate-fade-in">
-          <Check className="w-4 h-4 text-wheat" />
+        <div className="fixed bottom-24 md:bottom-8 right-4 left-4 md:left-auto md:w-96 bg-md-inverse-surface text-md-inverse-on-surface px-5 py-3 rounded-2xl shadow-md-3 flex items-center justify-center gap-2 z-50 text-sm font-semibold animate-fade-in border border-white/10">
+          <Check className="w-4 h-4 text-md-inverse-primary" />
           <span>{toast}</span>
         </div>
       )}

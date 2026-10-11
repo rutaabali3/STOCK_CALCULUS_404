@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { RefreshCw, X } from 'lucide-react';
+import { Md3Button } from './md3/Md3Button';
 
 export const UpdatePrompt: React.FC = () => {
   const {
@@ -20,24 +21,25 @@ export const UpdatePrompt: React.FC = () => {
   if (!needRefresh) return null;
 
   return (
-    <div className="fixed top-4 left-4 right-4 max-w-md mx-auto bg-forest text-cream p-3 rounded-xl shadow-2xl border border-wheat/40 flex items-center justify-between z-50 animate-fade-in text-xs font-semibold">
-      <div className="flex items-center gap-2">
-        <RefreshCw className="w-4 h-4 text-wheat animate-spin" />
+    <div className="fixed top-4 left-4 right-4 max-w-lg mx-auto bg-md-inverse-surface text-md-inverse-on-surface p-3.5 rounded-2xl shadow-md-3 border border-white/10 flex items-center justify-between z-50 animate-fade-in text-xs font-semibold">
+      <div className="flex items-center gap-2.5">
+        <RefreshCw className="w-4 h-4 text-md-inverse-primary animate-spin" />
         <span>New version available!</span>
       </div>
 
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <Md3Button
+          variant="filled"
+          size="sm"
           onClick={() => updateServiceWorker(true)}
-          className="px-3 py-1 bg-wheat text-forest font-bold rounded-lg shadow-sm hover:bg-wheat/90 active:scale-95 transition-all"
+          className="!h-8 !px-3 !text-xs !bg-md-inverse-primary !text-md-on-primary"
         >
           Update Now
-        </button>
+        </Md3Button>
         <button
           type="button"
           onClick={() => setNeedRefresh(false)}
-          className="p-1 text-cream/70 hover:text-white"
+          className="p-1 rounded-full text-md-inverse-on-surface/80 hover:text-md-inverse-on-surface hover:bg-white/10"
           aria-label="Dismiss update"
         >
           <X className="w-4 h-4" />

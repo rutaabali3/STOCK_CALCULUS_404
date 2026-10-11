@@ -2,16 +2,23 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { LocalSlipRecord, getAllSlipRecords, voidSlipRecord } from '../lib/db';
 import { formatDecimal } from 'shared/decimal';
 import { Search, Ban, Eye, ArrowLeft, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { Md3Button } from '../components/md3/Md3Button';
+import { Md3Dialog } from '../components/md3/Md3Dialog';
+import { Md3TextField } from '../components/md3/Md3TextField';
+import { Md3Chip } from '../components/md3/Md3Chip';
 
 interface HistoryProps {
   onSelectSlip: (record: LocalSlipRecord) => void;
   onBack: () => void;
 }
 
+type FilterStatus = 'all' | 'pending' | 'synced' | 'voided';
+
 export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
   const [records, setRecords] = useState<LocalSlipRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState<FilterStatus>('all');
 
   // Void modal state
   const [voidingId, setVoidingId] = useState<string | null>(null);
@@ -47,120 +54,167 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
   };
 
   const filteredSlips = useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    if (!q) return records;
+    let list = records;
 
-    return records.filter((r) => {
+    if (activeFilter === 'pending') {
+      list = list.filter((r) => r.syncStatus === 'pending' && !r.voided);
+    } else if (activeFilter === 'synced') {
+      list = list.filter((r) => r.syncStatus === 'synced' && !r.voided);
+    } else if (activeFilter === 'voided') {
+      list = list.filter((r) => Boolean(r.voided));
+    }
+
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return list;
+
+    return list.filter((r) => {
       const codeMatch = r.slipCode.toLowerCase().includes(q);
       const sellerMatch = r.payload.seller?.toLowerCase().includes(q) ?? false;
       const buyerMatch = r.payload.buyer?.toLowerCase().includes(q) ?? false;
       return codeMatch || sellerMatch || buyerMatch;
     });
-  }, [records, searchTerm]);
+  }, [records, searchTerm, activeFilter]);
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-screen p-4 pb-12 flex flex-col justify-between space-y-4">
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-2 border-b border-moss/20">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onBack}
-              className="p-1 text-mist hover:text-forest transition-colors"
-              aria-label="Back to weighment"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-black text-forest">Weighment History</h1>
+    <div className="w-full max-w-6xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+      {/* Header */}
+      <header className="flex items-center justify-between pb-4 border-b border-md-outline-variant/20">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="p-2 -ml-2 rounded-full text-md-on-surface-variant hover:text-md-on-surface hover:bg-md-on-surface/[0.08] transition-colors"
+            aria-label="Back to weighment"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-md-on-surface tracking-tight">
+              Weighment History
+            </h1>
+            <p className="text-xs text-md-on-surface-variant font-medium mt-0.5">
+              {records.length} Total Records
+            </p>
           </div>
-          <span className="text-xs font-bold text-mist">{records.length} Slips</span>
         </div>
+      </header>
 
-        {/* Search Bar */}
+      {/* Search and Filters Bar */}
+      <div className="space-y-3">
+        {/* MD3 Search Bar */}
         <div className="relative">
-          <Search className="w-4 h-4 text-mist absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-5 h-5 text-md-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             placeholder="Search seller, buyer, or slip code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-11 pl-9 pr-4 text-sm bg-white border border-moss/30 rounded-xl focus:border-forest focus:outline-none"
+            className="w-full h-13 pl-12 pr-4 text-sm bg-md-surface-container-high text-md-on-surface border border-md-outline-variant/40 rounded-full focus:outline-none focus:border-md-primary focus:ring-2 focus:ring-md-primary/20 shadow-xs transition-all"
           />
         </div>
 
-        {/* List of Slips */}
-        {loading ? (
-          <div className="py-12 text-center text-sm font-semibold text-mist">
-            Loading history...
-          </div>
-        ) : filteredSlips.length === 0 ? (
-          <div className="py-12 text-center border-2 border-dashed border-mist/30 rounded-xl bg-white/40">
-            <p className="text-sm font-medium text-mist">
-              {searchTerm ? 'No matching slips found.' : 'No slips saved yet.'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2.5">
-            {filteredSlips.map((rec) => {
-              const isVoided = Boolean(rec.voided);
-              const dateStr = new Date(rec.createdAt).toLocaleDateString('en-GB', {
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              });
+        {/* Filter Chips */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <Md3Chip
+            label={`All (${records.length})`}
+            selected={activeFilter === 'all'}
+            onClick={() => setActiveFilter('all')}
+          />
+          <Md3Chip
+            label="Pending Sync"
+            selected={activeFilter === 'pending'}
+            onClick={() => setActiveFilter('pending')}
+          />
+          <Md3Chip
+            label="Synced"
+            selected={activeFilter === 'synced'}
+            onClick={() => setActiveFilter('synced')}
+          />
+          <Md3Chip
+            label="Voided"
+            selected={activeFilter === 'voided'}
+            onClick={() => setActiveFilter('voided')}
+          />
+        </div>
+      </div>
 
-              return (
-                <div
-                  key={rec.id}
-                  className={`p-3.5 rounded-xl border transition-all bg-white shadow-sm flex flex-col gap-2 ${
-                    isVoided
-                      ? 'border-red-200 bg-red-50/30 opacity-75'
-                      : 'border-moss/20 hover:border-moss'
-                  }`}
-                >
+      {/* List of Slips in Responsive Grid */}
+      {loading ? (
+        <div className="py-16 text-center text-sm font-semibold text-md-on-surface-variant">
+          Loading weighment slips...
+        </div>
+      ) : filteredSlips.length === 0 ? (
+        <div className="py-16 text-center border-2 border-dashed border-md-outline-variant/50 rounded-3xl bg-md-surface-container-low">
+          <p className="text-sm font-medium text-md-on-surface-variant">
+            {searchTerm || activeFilter !== 'all'
+              ? 'No matching slips found.'
+              : 'No slips saved yet.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredSlips.map((rec) => {
+            const isVoided = Boolean(rec.voided);
+            const dateStr = new Date(rec.createdAt).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+
+            return (
+              <div
+                key={rec.id}
+                className={`p-4 rounded-2xl border transition-all duration-200 bg-md-surface-container-low flex flex-col justify-between gap-3 shadow-sm hover:shadow-md-2 ${
+                  isVoided
+                    ? 'border-md-error/30 bg-md-error-container/10 opacity-75'
+                    : 'border-md-outline-variant/30 hover:border-md-outline-variant'
+                }`}
+              >
+                <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-forest tracking-tight">
+                        <span className="text-sm font-black text-md-primary tracking-tight">
                           #{rec.slipCode}
                         </span>
                         {isVoided && (
-                          <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[10px] font-black uppercase rounded">
+                          <span className="px-2 py-0.5 bg-md-error text-md-on-error text-[10px] font-black uppercase rounded-full">
                             VOID
                           </span>
                         )}
                         {/* Sync Status Badge */}
                         {rec.syncStatus === 'synced' ? (
-                          <span className="flex items-center gap-0.5 text-[10px] font-bold text-moss">
-                            <CheckCircle2 className="w-3 h-3" />
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-md-primary">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Synced</span>
                           </span>
                         ) : rec.syncStatus === 'rejected' ? (
-                          <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-600">
-                            <AlertTriangle className="w-3 h-3" />
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-md-error">
+                            <AlertTriangle className="w-3.5 h-3.5" />
                             <span>Rejected</span>
                           </span>
                         ) : (
-                          <span className="flex items-center gap-0.5 text-[10px] font-bold text-mist">
-                            <Clock className="w-3 h-3" />
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-md-on-surface-variant">
+                            <Clock className="w-3.5 h-3.5" />
                             <span>Pending</span>
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-mist">{dateStr}</span>
+                      <span className="text-[11px] text-md-on-surface-variant mt-0.5 block">
+                        {dateStr}
+                      </span>
                     </div>
 
                     <div className="text-right">
                       <div
-                        className={`text-base font-black tabular-nums ${
-                          isVoided ? 'line-through text-mist' : 'text-forest'
+                        className={`text-lg font-black tabular-nums ${
+                          isVoided ? 'line-through text-md-on-surface-variant' : 'text-md-on-surface'
                         }`}
                       >
                         Rs. {rec.calcResult.totalRupees.toLocaleString('en-PK')}
                       </div>
-                      <span className="text-xs text-mist font-semibold tabular-nums">
+                      <span className="text-xs text-md-on-surface-variant font-semibold tabular-nums">
                         {rec.calcResult.bagCount} Bags • {formatDecimal(rec.calcResult.netG, 3)} kg
                       </span>
                     </div>
@@ -168,97 +222,101 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
 
                   {/* Seller / Buyer Tags if provided */}
                   {(rec.payload.seller || rec.payload.buyer) && (
-                    <div className="text-xs text-ink/80 flex items-center gap-3 pt-1 border-t border-moss/10 font-medium">
-                      {rec.payload.seller && <span>S: <strong>{rec.payload.seller}</strong></span>}
-                      {rec.payload.buyer && <span>B: <strong>{rec.payload.buyer}</strong></span>}
+                    <div className="text-xs text-md-on-surface-variant flex items-center gap-3 pt-2 border-t border-md-outline-variant/15 font-medium">
+                      {rec.payload.seller && (
+                        <span>
+                          S: <strong className="text-md-on-surface">{rec.payload.seller}</strong>
+                        </span>
+                      )}
+                      {rec.payload.buyer && (
+                        <span>
+                          B: <strong className="text-md-on-surface">{rec.payload.buyer}</strong>
+                        </span>
+                      )}
                     </div>
                   )}
 
                   {/* Void reason notice */}
                   {isVoided && rec.voided?.reason && (
-                    <p className="text-[11px] text-red-600 italic">
+                    <p className="text-[11px] text-md-error italic bg-md-error-container/30 px-2 py-1 rounded-lg">
                       Void reason: {rec.voided.reason}
                     </p>
                   )}
+                </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center justify-end gap-2 pt-1">
-                    {!isVoided && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVoidingId(rec.id);
-                          setVoidReason('');
-                          setVoidError(null);
-                        }}
-                        className="px-2.5 py-1 text-xs font-bold text-mist hover:text-red-600 flex items-center gap-1 rounded hover:bg-red-50 transition-colors"
-                      >
-                        <Ban className="w-3.5 h-3.5" />
-                        <span>Void</span>
-                      </button>
-                    )}
-
+                {/* Actions Row */}
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-md-outline-variant/15">
+                  {!isVoided && (
                     <button
                       type="button"
-                      onClick={() => onSelectSlip(rec)}
-                      className="px-3 py-1 bg-cream border border-moss/30 hover:border-forest text-forest text-xs font-bold rounded-lg flex items-center gap-1 transition-all shadow-sm"
+                      onClick={() => {
+                        setVoidingId(rec.id);
+                        setVoidReason('');
+                        setVoidError(null);
+                      }}
+                      className="px-3 py-1.5 text-xs font-bold text-md-on-surface-variant hover:text-md-error flex items-center gap-1 rounded-full hover:bg-md-error/10 transition-colors"
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>View Slip</span>
+                      <Ban className="w-3.5 h-3.5" />
+                      <span>Void</span>
                     </button>
-                  </div>
+                  )}
+
+                  <Md3Button
+                    variant="tonal"
+                    size="sm"
+                    onClick={() => onSelectSlip(rec)}
+                    icon={<Eye className="w-3.5 h-3.5" />}
+                  >
+                    View Slip
+                  </Md3Button>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Inline Void Reason Modal */}
-      {voidingId && (
-        <div className="fixed inset-0 bg-ink/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white rounded-2xl p-5 shadow-2xl space-y-4 animate-scale-in">
-            <div>
-              <h2 className="text-base font-black text-forest">Void Weighment Slip</h2>
-              <p className="text-xs text-mist mt-0.5">
-                Slips are never hard-deleted. Please provide a reason to mark this slip as void.
-              </p>
-            </div>
-
-            <input
-              type="text"
-              placeholder="e.g. Incorrect weight entry, cancelled deal"
-              value={voidReason}
-              onChange={(e) => {
-                setVoidReason(e.target.value);
-                if (voidError) setVoidError(null);
-              }}
-              className="w-full h-11 px-3 text-sm bg-cream/40 border border-moss/30 rounded-xl focus:border-red-600 focus:outline-none"
-            />
-
-            {voidError && (
-              <p className="text-xs text-red-600 font-semibold">{voidError}</p>
-            )}
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setVoidingId(null)}
-                className="px-4 py-2 text-xs font-bold text-mist hover:text-ink rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmVoid}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow"
-              >
-                Confirm Void
-              </button>
-            </div>
-          </div>
+              </div>
+            );
+          })}
         </div>
       )}
+
+      {/* MD3 Void Modal Dialog */}
+      <Md3Dialog
+        open={Boolean(voidingId)}
+        onClose={() => setVoidingId(null)}
+        title="Void Weighment Slip"
+        icon={<Ban className="w-5 h-5 text-md-error" />}
+        actions={
+          <>
+            <Md3Button
+              variant="text"
+              size="sm"
+              onClick={() => setVoidingId(null)}
+            >
+              Cancel
+            </Md3Button>
+            <Md3Button
+              variant="filled"
+              size="sm"
+              onClick={handleConfirmVoid}
+              className="!bg-md-error !text-md-on-error"
+            >
+              Confirm Void
+            </Md3Button>
+          </>
+        }
+      >
+        <div className="space-y-3 pt-1">
+          <p className="text-xs text-md-on-surface-variant">
+            Slips are never deleted. Please enter a reason to permanently mark this slip as voided.
+          </p>
+          <Md3TextField
+            placeholder="e.g. Incorrect weight entry, cancelled deal"
+            value={voidReason}
+            error={voidError}
+            onChange={(e) => {
+              setVoidReason(e.target.value);
+              if (voidError) setVoidError(null);
+            }}
+          />
+        </div>
+      </Md3Dialog>
     </div>
   );
 };
