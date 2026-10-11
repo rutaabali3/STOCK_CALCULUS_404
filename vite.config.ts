@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'icons/*.svg'],
+      includeAssets: ['favicon.svg', 'icons/*.svg', 'og-image.jpg', 'og-image.png'],
       manifest: {
         name: 'Mandi Weighment & Cost Calculator',
         short_name: 'Mandi',
@@ -35,8 +35,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,woff,woff2}'],
-        // Exclude /api/* from service worker caching
-        navigateFallbackDenylist: [/^\/api/],
+        // Exclude /api/* and direct static files from navigation fallback
+        navigateFallbackDenylist: [/^\/api/, /\.(png|jpg|jpeg|svg|webp|ico)$/],
         runtimeCaching: [
           {
             urlPattern: /^\/api/,

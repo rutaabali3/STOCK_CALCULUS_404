@@ -41,6 +41,7 @@
     "eslint-plugin-react-refresh": "^0.4.14",
     "postcss": "^8.4.49",
     "prettier": "^3.4.1",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
