@@ -12,12 +12,31 @@ export function sanitizeFilename(name: string): string {
 /**
  * Generates a high-resolution PNG from an HTML element using html-to-image.
  * Renders with pixelRatio: 2 on a solid white background for high-contrast thermal readability.
+ * Explicitly forces unconstrained targetWidth and targetHeight so images are never cut off on mobile viewports.
  */
-export async function generateSlipPng(element: HTMLElement): Promise<string> {
+export async function generateSlipPng(
+  element: HTMLElement,
+  explicitWidthPx?: number
+): Promise<string> {
+  const targetWidth = explicitWidthPx || element.scrollWidth || element.offsetWidth || 384;
+  const targetHeight = element.scrollHeight || element.offsetHeight || 600;
+
   return await toPng(element, {
+    width: targetWidth,
+    height: targetHeight,
+    canvasWidth: targetWidth * 2,
+    canvasHeight: targetHeight * 2,
     pixelRatio: 2,
     backgroundColor: '#FFFFFF',
     cacheBust: true,
+    style: {
+      width: `${targetWidth}px`,
+      minWidth: `${targetWidth}px`,
+      maxWidth: `${targetWidth}px`,
+      margin: '0',
+      transform: 'none',
+      position: 'static',
+    },
   });
 }
 
@@ -29,11 +48,11 @@ export async function generateSlipPdf(
   filename: string,
   widthMm: number
 ): Promise<void> {
-  const dataUrl = await generateSlipPng(element);
-  const elWidth = element.offsetWidth || 384;
-  const elHeight = element.offsetHeight || 600;
+  const widthPx = widthMm === 90 ? 648 : widthMm === 80 ? 576 : 384;
+  const dataUrl = await generateSlipPng(element, widthPx);
+  const targetHeight = element.scrollHeight || element.offsetHeight || 600;
   // Calculate proportional height in mm
-  const heightMm = Math.max(80, Math.round((elHeight / elWidth) * widthMm));
+  const heightMm = Math.max(80, Math.round((targetHeight / widthPx) * widthMm));
 
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -81,13 +100,15 @@ export function downloadDataUrl(dataUrl: string, filename: string): void {
 export async function shareOrDownloadSlip(
   element: HTMLElement,
   slipCode: string,
-  customFilename?: string
+  customFilename?: string,
+  widthMm: 58 | 80 | 90 = 90
 ): Promise<{ method: 'shared' | 'downloaded' | 'opened' }> {
+  const widthPx = widthMm === 90 ? 648 : widthMm === 80 ? 576 : 384;
   const baseName = customFilename?.trim()
     ? sanitizeFilename(customFilename)
     : `mandi-slip-${slipCode}`;
   const filename = baseName.toLowerCase().endsWith('.png') ? baseName : `${baseName}.png`;
-  const dataUrl = await generateSlipPng(element);
+  const dataUrl = await generateSlipPng(element, widthPx);
 
   // Check if Web Share API with file support is available
   if (navigator.canShare) {

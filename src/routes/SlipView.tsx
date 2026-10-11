@@ -50,7 +50,12 @@ export const SlipView: React.FC<SlipViewProps> = ({
     if (!cardRef.current) return;
     setLoading(true);
     try {
-      const res = await shareOrDownloadSlip(cardRef.current, slipData.slipCode);
+      const res = await shareOrDownloadSlip(
+        cardRef.current,
+        slipData.slipCode,
+        customFileName,
+        currentWidthMm
+      );
       if (res.method === 'shared') {
         showToast('Slip shared successfully');
       } else {
@@ -67,7 +72,8 @@ export const SlipView: React.FC<SlipViewProps> = ({
     if (!cardRef.current) return;
     setLoading(true);
     try {
-      const dataUrl = await generateSlipPng(cardRef.current);
+      const widthPx = currentWidthMm === 90 ? 648 : currentWidthMm === 80 ? 576 : 384;
+      const dataUrl = await generateSlipPng(cardRef.current, widthPx);
       const name = customFileName.trim() ? customFileName.trim() : `mandi-slip-${slipData.slipCode}`;
       downloadDataUrl(dataUrl, name.toLowerCase().endsWith('.png') ? name : `${name}.png`);
       showToast('Slip image saved (PNG)');
@@ -136,20 +142,22 @@ export const SlipView: React.FC<SlipViewProps> = ({
       </header>
 
       {/* Rendered Slip Card preview on MD3 Stage */}
-      <div className="bg-md-surface-container-low rounded-3xl p-4 sm:p-6 border border-md-outline-variant/20 overflow-x-auto flex justify-center shadow-inner">
-        <SlipCard
-          ref={cardRef}
-          slipCode={slipData.slipCode}
-          createdAt={slipData.createdAt}
-          shopName={settings.shopName}
-          weightsG={slipData.weightsG}
-          calcResult={slipData.calcResult}
-          extras={slipData.extras}
-          rateStr={slipData.rateStr}
-          slipWidthMm={currentWidthMm}
-          chargeMode={settings.chargeMode}
-          roundToRupee={settings.roundToRupee}
-        />
+      <div className="bg-md-surface-container-low rounded-3xl p-4 sm:p-6 border border-md-outline-variant/20 overflow-x-auto flex justify-start sm:justify-center shadow-inner">
+        <div className="shrink-0 flex-none mx-auto">
+          <SlipCard
+            ref={cardRef}
+            slipCode={slipData.slipCode}
+            createdAt={slipData.createdAt}
+            shopName={settings.shopName}
+            weightsG={slipData.weightsG}
+            calcResult={slipData.calcResult}
+            extras={slipData.extras}
+            rateStr={slipData.rateStr}
+            slipWidthMm={currentWidthMm}
+            chargeMode={settings.chargeMode}
+            roundToRupee={settings.roundToRupee}
+          />
+        </div>
       </div>
 
       {/* Action Controls Section */}

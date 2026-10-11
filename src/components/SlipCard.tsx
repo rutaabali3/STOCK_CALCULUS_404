@@ -33,12 +33,12 @@ export const SlipCard = React.forwardRef<HTMLDivElement, SlipCardProps>(
     ref
   ) => {
     // Thermal printer dot widths: 384px for 58mm, 576px for 80mm, 648px for 90mm
-    const cardWidthPx =
+    const targetWidthPx =
       slipWidthMm === 90
-        ? 'w-[648px]'
+        ? 648
         : slipWidthMm === 80
-        ? 'w-[576px]'
-        : 'w-[384px]';
+        ? 576
+        : 384;
 
     // Format date in clean British style: "10 Oct 2026, 1:15 PM"
     const formattedDate = new Intl.DateTimeFormat('en-GB', {
@@ -53,8 +53,11 @@ export const SlipCard = React.forwardRef<HTMLDivElement, SlipCardProps>(
     return (
       <div
         ref={ref}
-        className={`${cardWidthPx} bg-white text-ink p-6 border-2 border-ink shadow-md font-sans mx-auto`}
+        className="bg-white text-ink p-6 border-2 border-ink shadow-md font-sans mx-auto shrink-0 flex-none box-border"
         style={{
+          width: `${targetWidthPx}px`,
+          minWidth: `${targetWidthPx}px`,
+          maxWidth: `${targetWidthPx}px`,
           fontVariantNumeric: 'tabular-nums',
         }}
       >
