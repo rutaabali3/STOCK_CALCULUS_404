@@ -1,9 +1,8 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyToken } from '../_lib/auth';
-import { getDb } from '../_lib/db';
-import { batchSlipsPayloadSchema } from '../../shared/schema';
-import { computeSlip } from '../../shared/calc';
-import { CalcInput } from '../../shared/types';
+import type { VercelRequest, VercelResponse, CalcInput } from '../_lib/types.js';
+import { verifyToken } from '../_lib/auth.js';
+import { getDb } from '../_lib/db.js';
+import { batchSlipsPayloadSchema } from '../_lib/schema.js';
+import { computeSlip } from '../_lib/calc.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Authentication check
@@ -20,7 +19,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
    * POST: Batch Upsert Slips
    * ------------------------------------------------------------- */
   if (req.method === 'POST') {
-    const parseResult = batchSlipsPayloadSchema.safeParse(req.body);
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const parseResult = batchSlipsPayloadSchema.safeParse(body);
     if (!parseResult.success) {
       return res.status(400).json({
         error: { code: 'validation_error', message: parseResult.error.message },

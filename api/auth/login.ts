@@ -1,8 +1,8 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../_lib/types.js';
 import crypto from 'crypto';
-import { loginSchema } from '../../shared/schema';
-import { createToken } from '../_lib/auth';
-import { checkRateLimit, recordLoginAttempt } from '../_lib/ratelimit';
+import { loginSchema } from '../_lib/schema.js';
+import { createToken } from '../_lib/auth.js';
+import { checkRateLimit, recordLoginAttempt } from '../_lib/ratelimit.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const ip =
     (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
-    req.socket.remoteAddress ||
+    req.socket?.remoteAddress ||
     '127.0.0.1';
 
   try {
@@ -22,7 +22,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const parseResult = loginSchema.safeParse(req.body);
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const parseResult = loginSchema.safeParse(body);
     if (!parseResult.success) {
       return res.status(400).json({
         error: { code: 'bad_request', message: 'Invalid request body' },

@@ -1,7 +1,7 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyToken } from '../../_lib/auth';
-import { getDb } from '../../_lib/db';
-import { voidSlipSchema } from '../../../shared/schema';
+import type { VercelRequest, VercelResponse } from '../../_lib/types.js';
+import { verifyToken } from '../../_lib/auth.js';
+import { getDb } from '../../_lib/db.js';
+import { voidSlipSchema } from '../../_lib/schema.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -20,7 +20,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: { code: 'bad_request', message: 'Slip id is required' } });
   }
 
-  const parseResult = voidSlipSchema.safeParse(req.body);
+  const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  const parseResult = voidSlipSchema.safeParse(body);
   if (!parseResult.success) {
     return res.status(400).json({ error: { code: 'validation_error', message: parseResult.error.message } });
   }

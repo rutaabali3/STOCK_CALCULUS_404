@@ -8,7 +8,6 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -28,5 +27,5 @@
       "shared/*": ["shared/*"]
     }
   },
-  "include": ["src", "shared", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "shared", "api", "vite.config.ts", "vitest.config.ts"]
 }

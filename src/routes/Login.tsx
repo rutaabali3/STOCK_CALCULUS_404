@@ -27,13 +27,34 @@ export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
         body: JSON.stringify({ pin: pin.trim() }),
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = null;
+      if (contentType.includes('application/json')) {
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
+        }
+      }
 
       if (!res.ok) {
         if (res.status === 429) {
           throw new Error('Too many failed attempts. Please try again in 15 minutes.');
         }
-        throw new Error(data?.error?.message || 'Invalid PIN entered');
+        if (data?.error?.message) {
+          throw new Error(data.error.message);
+        }
+        if (res.status === 401) {
+          throw new Error('Invalid PIN entered');
+        }
+        if (res.status === 500) {
+          throw new Error('Server error (500): Serverless function encountered an error. Please check server logs.');
+        }
+        throw new Error(`Login failed with server status ${res.status}`);
+      }
+
+      if (!data?.token) {
+        throw new Error('Server did not return a valid session token');
       }
 
       // Store token in IndexedDB

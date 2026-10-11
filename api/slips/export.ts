@@ -1,7 +1,7 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyToken } from '../_lib/auth';
-import { getDb } from '../_lib/db';
-import { buildCsvRow } from '../_lib/csv';
+import type { VercelRequest, VercelResponse } from '../_lib/types.js';
+import { verifyToken } from '../_lib/auth.js';
+import { getDb } from '../_lib/db.js';
+import { buildCsvRow } from '../_lib/csv.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
