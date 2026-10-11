@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppSettings, ThemeMode, SlipFontSize, DEFAULT_SLIP_CUSTOMIZATION } from '../lib/settings';
 import { exportBackupData, importBackupData, BackupData, getOrCreateDeviceId } from '../lib/db';
 import { formatDecimal, parseDecimal } from 'shared/decimal';
-import { Download, Upload, ArrowLeft, Check, ShieldCheck, Sun, Moon, Monitor, SlidersHorizontal } from 'lucide-react';
+import { Download, Upload, ArrowLeft, Check, ShieldCheck, Sun, Moon, Monitor, SlidersHorizontal, LogOut } from 'lucide-react';
 import { Md3Button } from '../components/md3/Md3Button';
 import { Md3Card } from '../components/md3/Md3Card';
 import { Md3TextField } from '../components/md3/Md3TextField';
@@ -13,12 +13,14 @@ interface SettingsProps {
   settings: AppSettings;
   onUpdateSettings: (newSettings: AppSettings) => void;
   onBack: () => void;
+  onLogout?: () => void;
 }
 
 export const Settings: React.FC<SettingsProps> = ({
   settings,
   onUpdateSettings,
   onBack,
+  onLogout,
 }) => {
   const [shopName, setShopName] = useState(settings.shopName);
   const [rateStr, setRateStr] = useState(() => formatDecimal(settings.defaultRatePaisa, 2));
@@ -475,6 +477,29 @@ export const Settings: React.FC<SettingsProps> = ({
               </span>
             </div>
           </div>
+        </Md3Card>
+
+        {/* Card 6: Security & Session */}
+        <Md3Card variant="elevated" className="p-5 space-y-3">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
+            Security & Access Lock
+          </h2>
+          <p className="text-xs text-md-on-surface-variant leading-relaxed">
+            Your device is authorized with your shop PIN. To prevent unauthorized use, you can lock the application at any time.
+          </p>
+          {onLogout && (
+            <div className="pt-2">
+              <Md3Button
+                variant="outlined"
+                size="md"
+                onClick={onLogout}
+                icon={<LogOut className="w-4 h-4 text-md-error" />}
+                className="w-full text-md-error border-md-error/40 hover:bg-md-error/10"
+              >
+                Lock App / Log Out
+              </Md3Button>
+            </div>
+          )}
         </Md3Card>
       </div>
 

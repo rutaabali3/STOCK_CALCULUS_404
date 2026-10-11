@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { getMandiDB } from '../lib/db';
-import { Lock, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Lock, ArrowRight } from 'lucide-react';
 import { Md3Button } from '../components/md3/Md3Button';
 import { Md3Card } from '../components/md3/Md3Card';
 
 interface LoginProps {
   onSuccess: () => void;
-  onCancel?: () => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onSuccess, onCancel }) => {
+export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,10 +55,10 @@ export const Login: React.FC<LoginProps> = ({ onSuccess, onCancel }) => {
           <Lock className="w-8 h-8" />
         </div>
         <h1 className="text-2xl font-black text-md-on-surface tracking-tight">
-          Unlock Online Sync
+          Mandi Calculator
         </h1>
         <p className="text-xs text-md-on-surface-variant leading-relaxed">
-          Enter your shop PIN to connect to the cloud database and sync your weighment records.
+          This system is private and protected. Enter your shop PIN to access the weighment calculator and database.
         </p>
       </div>
 
@@ -67,7 +66,7 @@ export const Login: React.FC<LoginProps> = ({ onSuccess, onCancel }) => {
         <form onSubmit={handleUnlock} className="space-y-4">
           <div className="space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-md-on-surface-variant text-center">
-              Security PIN
+              Enter Shop PIN
             </label>
             <div className="bg-md-surface-container-lowest border border-md-outline/40 hover:border-md-outline focus-within:border-2 focus-within:border-md-primary focus-within:ring-4 focus-within:ring-md-primary/10 rounded-2xl transition-all shadow-xs">
               <input
@@ -100,21 +99,8 @@ export const Login: React.FC<LoginProps> = ({ onSuccess, onCancel }) => {
             trailingIcon={<ArrowRight className="w-4 h-4 ml-1" />}
             className="w-full h-14 font-bold"
           >
-            Connect to Shop
+            Unlock Application
           </Md3Button>
-
-          {onCancel && (
-            <Md3Button
-              type="button"
-              variant="text"
-              size="sm"
-              onClick={onCancel}
-              icon={<ArrowLeft className="w-3.5 h-3.5" />}
-              className="w-full text-xs text-md-on-surface-variant hover:text-md-on-surface"
-            >
-              Continue Offline
-            </Md3Button>
-          )}
         </form>
       </Md3Card>
     </div>

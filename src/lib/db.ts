@@ -99,6 +99,35 @@ export function getOrCreateDeviceId(): string {
 }
 
 /* -------------------------------------------------------------
+ * AUTH REPOSITORY
+ * ------------------------------------------------------------- */
+
+export async function getAuthRecord(): Promise<AuthRecord | undefined> {
+  const db = await getMandiDB();
+  return await db.get('auth', 'current');
+}
+
+export async function setAuthRecord(auth: AuthRecord): Promise<void> {
+  const db = await getMandiDB();
+  await db.put('auth', auth, 'current');
+}
+
+export async function clearAuthRecord(): Promise<void> {
+  const db = await getMandiDB();
+  await db.delete('auth', 'current');
+}
+
+export async function isSessionValid(): Promise<boolean> {
+  try {
+    const auth = await getAuthRecord();
+    if (!auth?.token || !auth.expiresAt) return false;
+    return new Date(auth.expiresAt).getTime() > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+/* -------------------------------------------------------------
  * SLIPS REPOSITORY
  * ------------------------------------------------------------- */
 

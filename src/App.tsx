@@ -3,6 +3,7 @@ import { Weigh } from './routes/Weigh';
 import { SlipView, SlipData } from './routes/SlipView';
 import { History } from './routes/History';
 import { Settings } from './routes/Settings';
+import { Login } from './routes/Login';
 import { loadSettings, saveSettings, AppSettings, applyTheme } from './lib/settings';
 import {
   saveSlipRecord,
@@ -11,7 +12,10 @@ import {
   setStoredSettings,
   getOrCreateDeviceId,
   requestPersistentStorage,
+  isSessionValid,
+  clearAuthRecord,
 } from './lib/db';
+import { syncWorker } from './lib/sync';
 import { ulid } from 'ulid';
 import { CalcResult, SlipPayload } from 'shared/types';
 import { ExtrasState } from './components/ExtrasPanel';
@@ -26,10 +30,19 @@ export default function App() {
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
   const [activeTab, setActiveTab] = useState<ActiveTab>('weigh');
   const [currentSlip, setCurrentSlip] = useState<SlipData | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Attempt persistent storage request on load
     requestPersistentStorage();
+
+    // Check PIN session authentication
+    isSessionValid().then((valid) => {
+      setIsAuthenticated(valid);
+      if (valid) {
+        syncWorker.triggerSync();
+      }
+    });
 
     // Sync settings from IndexedDB if present
     getStoredSettings().then((stored) => {
@@ -37,6 +50,11 @@ export default function App() {
       applyTheme(stored.theme || 'system');
     });
   }, []);
+
+  const handleLogout = async () => {
+    await clearAuthRecord();
+    setIsAuthenticated(false);
+  };
 
   const handleUpdateSettings = async (newSettings: AppSettings) => {
     setSettings(newSettings);
@@ -120,6 +138,30 @@ export default function App() {
     setActiveTab('slip');
   };
 
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-md-surface flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3 animate-pulse">
+          <div className="w-12 h-12 rounded-2xl bg-md-primary flex items-center justify-center text-white font-black text-xl shadow-md-2">
+            M
+          </div>
+          <span className="text-sm font-semibold text-md-on-surface-variant">Loading Mandi...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Login
+        onSuccess={() => {
+          setIsAuthenticated(true);
+          syncWorker.triggerSync();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-md-surface text-md-on-surface flex flex-col md:flex-row transition-colors duration-200">
       <UpdatePrompt />
@@ -156,6 +198,7 @@ export default function App() {
             settings={settings}
             onUpdateSettings={handleUpdateSettings}
             onBack={() => setActiveTab('weigh')}
+            onLogout={handleLogout}
           />
         )}
 
