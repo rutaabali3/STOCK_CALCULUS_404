@@ -55,12 +55,12 @@ export const WeightInput: React.FC<WeightInputProps> = ({ onAddWeight, disabled 
 
   return (
     <div className="w-full space-y-1.5">
-      <div className="flex items-stretch gap-2.5">
+      <div className="flex items-center gap-3">
         <div
-          className={`relative flex-1 bg-md-surface-container-lowest border-2 rounded-2xl transition-all duration-200 shadow-sm ${
+          className={`relative flex-1 h-14 bg-md-surface-container-lowest border rounded-2xl transition-all duration-200 ${
             error
-              ? 'border-md-error'
-              : 'border-md-outline-variant focus-within:border-md-primary focus-within:ring-2 focus-within:ring-md-primary/20'
+              ? 'border-2 border-md-error ring-2 ring-md-error/15'
+              : 'border-md-outline/40 hover:border-md-outline focus-within:border-2 focus-within:border-md-primary focus-within:ring-4 focus-within:ring-md-primary/10'
           }`}
         >
           <input
@@ -76,7 +76,7 @@ export const WeightInput: React.FC<WeightInputProps> = ({ onAddWeight, disabled 
             }}
             onKeyDown={handleKeyDown}
             aria-label="Bag weight in kilograms"
-            className="w-full h-14 pl-4 pr-12 text-2xl font-black bg-transparent text-md-on-surface placeholder:text-md-on-surface-variant/40 focus:outline-none tabular-nums"
+            className="w-full h-full pl-4 pr-12 text-2xl font-black bg-transparent text-md-on-surface placeholder:text-md-on-surface-variant/30 focus:outline-none tabular-nums"
           />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-md-on-surface-variant pointer-events-none select-none">
             kg
@@ -88,7 +88,7 @@ export const WeightInput: React.FC<WeightInputProps> = ({ onAddWeight, disabled 
           onClick={handleAdd}
           disabled={disabled}
           aria-label="Add bag weight"
-          className="h-14 px-6 md:px-8 bg-md-primary hover:bg-md-primary/90 active:scale-[0.98] text-md-on-primary font-bold text-base rounded-full flex items-center justify-center gap-2 shadow-md-2 hover:shadow-md-3 transition-all shrink-0 disabled:opacity-40 select-none cursor-pointer"
+          className="h-14 px-6 sm:px-8 bg-md-primary hover:bg-md-primary/90 active:scale-[0.98] text-md-on-primary font-bold text-base rounded-2xl flex items-center justify-center gap-2 shadow-md-1 hover:shadow-md-2 transition-all shrink-0 disabled:opacity-40 select-none cursor-pointer"
         >
           <Plus className="w-5 h-5 stroke-[2.5]" />
           <span>Add</span>

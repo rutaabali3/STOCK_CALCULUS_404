@@ -23,21 +23,21 @@ export const Md3Button: React.FC<Md3ButtonProps> = ({
   ...props
 }) => {
   const baseClasses =
-    'inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-md-primary/50 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98]';
+    'inline-flex items-center justify-center font-semibold rounded-full transition-all duration-200 select-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-md-primary/50 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98]';
 
   const sizeClasses = {
     sm: 'h-9 px-4 text-xs gap-1.5',
     md: 'h-11 px-5 text-sm gap-2',
-    lg: 'h-13 px-6 text-base font-bold gap-2.5',
+    lg: 'h-14 px-6 text-base font-bold gap-2.5',
   }[size];
 
   const variantClasses = {
     filled:
-      'bg-md-primary text-md-on-primary shadow-md-1 hover:shadow-md-2 hover:bg-md-primary/95',
+      'bg-md-primary text-md-on-primary shadow-md-1 hover:shadow-md-2 hover:bg-md-primary/90',
     tonal:
-      'bg-md-secondary-container text-md-on-secondary-container hover:bg-md-secondary-container/90',
+      'bg-md-secondary-container text-md-on-secondary-container hover:bg-md-secondary-container/85',
     outlined:
-      'bg-transparent border border-md-outline text-md-primary hover:bg-md-primary/[0.08]',
+      'bg-transparent border border-md-outline/60 text-md-primary hover:bg-md-primary/[0.08]',
     text:
       'bg-transparent text-md-primary hover:bg-md-primary/[0.08] px-3',
     elevated:

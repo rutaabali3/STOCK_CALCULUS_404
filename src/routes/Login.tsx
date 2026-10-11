@@ -69,7 +69,7 @@ export const Login: React.FC<LoginProps> = ({ onSuccess, onCancel }) => {
             <label className="block text-xs font-bold uppercase tracking-wider text-md-on-surface-variant text-center">
               Security PIN
             </label>
-            <div className="bg-md-surface-container-lowest border-2 border-md-outline-variant focus-within:border-md-primary rounded-2xl transition-all shadow-xs">
+            <div className="bg-md-surface-container-lowest border border-md-outline/40 hover:border-md-outline focus-within:border-2 focus-within:border-md-primary focus-within:ring-4 focus-within:ring-md-primary/10 rounded-2xl transition-all shadow-xs">
               <input
                 type="password"
                 autoFocus
@@ -98,7 +98,7 @@ export const Login: React.FC<LoginProps> = ({ onSuccess, onCancel }) => {
             loading={loading}
             disabled={!pin.trim()}
             trailingIcon={<ArrowRight className="w-4 h-4 ml-1" />}
-            className="w-full h-13 font-bold"
+            className="w-full h-14 font-bold"
           >
             Connect to Shop
           </Md3Button>

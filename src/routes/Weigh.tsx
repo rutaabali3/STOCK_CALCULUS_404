@@ -9,10 +9,10 @@ import { parseDecimal, formatDecimal } from 'shared/decimal';
 import { CalcInput, CalcResult } from 'shared/types';
 import { AppSettings } from '../lib/settings';
 import { RotateCcw, FileText, ArrowRight } from 'lucide-react';
-import { Md3Button } from '../components/md3/Md3Button';
 
 interface WeighProps {
   settings: AppSettings;
+  onUpdateSettings?: (newSettings: AppSettings) => void;
   onSaveSlip?: (
     result: CalcResult,
     weightsG: number[],
@@ -21,7 +21,11 @@ interface WeighProps {
   ) => void;
 }
 
-export const Weigh: React.FC<WeighProps> = ({ settings, onSaveSlip }) => {
+export const Weigh: React.FC<WeighProps> = ({
+  settings,
+  onUpdateSettings,
+  onSaveSlip,
+}) => {
   const [weightsG, setWeightsG] = useState<number[]>([]);
   const [rateStr, setRateStr] = useState<string>(() =>
     formatDecimal(settings.defaultRatePaisa, 2)
@@ -132,6 +136,12 @@ export const Weigh: React.FC<WeighProps> = ({ settings, onSaveSlip }) => {
     }
   };
 
+  const handleToggleRounding = (val: boolean) => {
+    if (onUpdateSettings) {
+      onUpdateSettings({ ...settings, roundToRupee: val });
+    }
+  };
+
   // Compute live calculation result
   const { calcResult, calcError } = useMemo(() => {
     if (weightsG.length === 0) {
@@ -192,9 +202,9 @@ export const Weigh: React.FC<WeighProps> = ({ settings, onSaveSlip }) => {
   const canSave = Boolean(calcResult && !calcError && weightsG.length > 0);
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-      {/* Top App Bar / Header */}
-      <header className="flex items-center justify-between pb-4 border-b border-md-outline-variant/20">
+    <div className="w-full max-w-6xl mx-auto p-4 md:p-6 lg:p-8 space-y-5">
+      {/* Top Header */}
+      <header className="flex items-center justify-between pb-3 border-b border-md-outline-variant/20">
         <div>
           <h1 className="text-2xl font-black text-md-on-surface tracking-tight">
             Mandi Weighment
@@ -208,10 +218,12 @@ export const Weigh: React.FC<WeighProps> = ({ settings, onSaveSlip }) => {
         </div>
       </header>
 
-      {/* Responsive 2-Column Grid on Tablet & Desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Input, Bag Stream, Extras */}
-        <div className="lg:col-span-7 space-y-5">
+      {/* Responsive Layout Grid:
+          - Mobile: Single column with sticky bottom Totals & Actions
+          - Desktop (lg+): 2-Column Dashboard with right sticky column */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left Column: Weight Input, Bag Chips Stream, Extras */}
+        <div className="lg:col-span-7 space-y-4">
           <WeightInput onAddWeight={handleAddWeight} />
 
           <BagChips
@@ -228,14 +240,15 @@ export const Weigh: React.FC<WeighProps> = ({ settings, onSaveSlip }) => {
           />
         </div>
 
-        {/* Right Column: Totals Bar, Errors & Action Buttons */}
-        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-6">
+        {/* Right Column (Desktop) & Sticky Bottom Bar (Mobile) */}
+        <div className="lg:col-span-5 space-y-3 sticky bottom-0 lg:static bg-md-surface/95 lg:bg-transparent backdrop-blur-md lg:backdrop-blur-none pt-2 pb-1 lg:p-0 z-20 border-t lg:border-t-0 border-md-outline-variant/20">
           <TotalsBar
             result={calcResult}
             rateStr={rateStr}
             onRateChange={setRateStr}
             hasTare={Boolean(extras.tareKgStr.trim() && parseDecimal(extras.tareKgStr, 3))}
             roundToRupee={settings.roundToRupee}
+            onToggleRoundToRupee={onUpdateSettings ? handleToggleRounding : undefined}
           />
 
           {calcError && (
@@ -244,38 +257,38 @@ export const Weigh: React.FC<WeighProps> = ({ settings, onSaveSlip }) => {
             </p>
           )}
 
-          <div className="flex items-center gap-3 pt-2">
+          {/* Action Buttons Row */}
+          <div className="flex items-center gap-2.5 pt-1">
             {/* Reset Button (2-tap confirm) */}
             <button
               type="button"
               onClick={handleResetClick}
               disabled={weightsG.length === 0}
-              className={`h-13 px-5 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-all shrink-0 cursor-pointer select-none border ${
+              className={`h-12 sm:h-14 px-5 rounded-2xl font-bold text-sm flex items-center justify-center gap-1.5 transition-all shrink-0 cursor-pointer select-none border shadow-xs ${
                 resetConfirming
                   ? 'bg-md-error text-md-on-error border-transparent shadow-md-2 animate-pulse'
-                  : 'bg-md-surface-container-low text-md-on-surface-variant border-md-outline-variant hover:text-md-error hover:border-md-error/50 disabled:opacity-40 disabled:cursor-not-allowed'
+                  : 'bg-md-surface-container-high text-md-on-surface-variant border-md-outline/30 hover:text-md-error hover:border-md-error/50 hover:bg-md-error/10 disabled:opacity-40 disabled:cursor-not-allowed'
               }`}
             >
               <RotateCcw className="w-4 h-4" />
-              <span>{resetConfirming ? 'Tap to Confirm' : 'Reset'}</span>
+              <span>{resetConfirming ? 'Confirm?' : 'Reset'}</span>
             </button>
 
             {/* Save & Show Slip Button */}
-            <Md3Button
-              variant="filled"
-              size="lg"
+            <button
+              type="button"
               disabled={!canSave}
               onClick={() => {
                 if (canSave && calcResult && onSaveSlip) {
                   onSaveSlip(calcResult, weightsG, extras, rateStr);
                 }
               }}
-              icon={<FileText className="w-5 h-5 text-md-tertiary" />}
-              trailingIcon={<ArrowRight className="w-4 h-4 ml-1" />}
-              className="flex-1 h-13 shadow-md-2 hover:shadow-md-3"
+              className="flex-1 h-12 sm:h-14 rounded-2xl bg-md-primary hover:bg-md-primary/90 text-md-on-primary font-bold text-sm sm:text-base shadow-md-2 hover:shadow-md-3 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer select-none"
             >
-              Save & Show Slip
-            </Md3Button>
+              <FileText className="w-5 h-5 text-md-tertiary shrink-0" />
+              <span>Save & Show Slip</span>
+              <ArrowRight className="w-4 h-4 ml-0.5 shrink-0" />
+            </button>
           </div>
         </div>
       </div>

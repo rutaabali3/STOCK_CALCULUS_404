@@ -109,7 +109,7 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
             placeholder="Search seller, buyer, or slip code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-13 pl-12 pr-4 text-sm bg-md-surface-container-high text-md-on-surface border border-md-outline-variant/40 rounded-full focus:outline-none focus:border-md-primary focus:ring-2 focus:ring-md-primary/20 shadow-xs transition-all"
+            className="w-full h-12 sm:h-14 pl-12 pr-4 text-base bg-md-surface-container-high text-md-on-surface border border-md-outline/40 rounded-full focus:outline-none focus:border-2 focus:border-md-primary focus:ring-4 focus:ring-md-primary/10 shadow-xs transition-all"
           />
         </div>
 

@@ -8,6 +8,7 @@ interface TotalsBarProps {
   onRateChange: (rate: string) => void;
   hasTare: boolean;
   roundToRupee: boolean;
+  onToggleRoundToRupee?: (val: boolean) => void;
 }
 
 export const TotalsBar: React.FC<TotalsBarProps> = ({
@@ -16,12 +17,13 @@ export const TotalsBar: React.FC<TotalsBarProps> = ({
   onRateChange,
   hasTare,
   roundToRupee,
+  onToggleRoundToRupee,
 }) => {
   return (
-    <div className="w-full bg-md-surface-container text-md-on-surface rounded-3xl p-4 sm:p-5 shadow-md-2 border border-md-outline-variant/30 space-y-4">
+    <div className="w-full bg-md-surface-container text-md-on-surface rounded-3xl p-4 sm:p-5 shadow-md-2 border border-md-outline-variant/30 space-y-3.5">
       {/* Metrics Row (3-Pill Grid) */}
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="bg-md-surface-container-high rounded-2xl p-2.5 sm:p-3 border border-md-outline-variant/20">
+        <div className="bg-md-surface-container-high rounded-2xl p-2.5 sm:p-3 border border-md-outline-variant/20 shadow-xs">
           <span className="block text-[11px] uppercase tracking-wider text-md-on-surface-variant font-bold">
             Total Bags
           </span>
@@ -30,7 +32,7 @@ export const TotalsBar: React.FC<TotalsBarProps> = ({
           </span>
         </div>
 
-        <div className="bg-md-surface-container-high rounded-2xl p-2.5 sm:p-3 border border-md-outline-variant/20">
+        <div className="bg-md-surface-container-high rounded-2xl p-2.5 sm:p-3 border border-md-outline-variant/20 shadow-xs">
           <span className="block text-[11px] uppercase tracking-wider text-md-on-surface-variant font-bold">
             Gross Weight
           </span>
@@ -39,7 +41,7 @@ export const TotalsBar: React.FC<TotalsBarProps> = ({
           </span>
         </div>
 
-        <div className="bg-md-surface-container-high rounded-2xl p-2.5 sm:p-3 border border-md-outline-variant/20">
+        <div className="bg-md-surface-container-high rounded-2xl p-2.5 sm:p-3 border border-md-outline-variant/20 shadow-xs">
           <span className="block text-[11px] uppercase tracking-wider text-md-tertiary font-bold">
             Mann (40kg)
           </span>
@@ -68,27 +70,46 @@ export const TotalsBar: React.FC<TotalsBarProps> = ({
       )}
 
       {/* Rate input and Total Payable */}
-      <div className="flex items-center justify-between gap-3 pt-1 border-t border-md-outline-variant/20">
+      <div className="flex items-center justify-between gap-3 pt-2 border-t border-md-outline-variant/20">
         <div className="w-1/2">
-          <label className="block text-xs font-bold uppercase tracking-wider text-md-on-surface-variant mb-1">
-            Rate / Mann (Rs)
+          <label className="block text-xs font-semibold text-md-on-surface-variant mb-1">
+            Rate / Mann
           </label>
-          <div className="bg-md-surface-container-lowest border-2 border-md-outline-variant focus-within:border-md-primary rounded-2xl transition-all shadow-xs">
+          <div className="relative flex items-center h-12 bg-md-surface-container-lowest border border-md-outline/40 rounded-xl focus-within:border-2 focus-within:border-md-primary focus-within:ring-2 focus-within:ring-md-primary/15 transition-all shadow-xs">
+            <span className="pl-3 text-xs font-bold text-md-on-surface-variant pointer-events-none select-none">
+              Rs.
+            </span>
             <input
               type="text"
               inputMode="decimal"
               placeholder="2000"
               value={rateStr}
               onChange={(e) => onRateChange(e.target.value)}
-              className="w-full h-12 px-3 text-lg font-black bg-transparent text-md-on-surface placeholder:text-md-on-surface-variant/40 focus:outline-none tabular-nums"
+              className="w-full h-full pl-2 pr-3 text-lg font-black bg-transparent text-md-on-surface placeholder:text-md-on-surface-variant/40 focus:outline-none tabular-nums"
             />
           </div>
         </div>
 
         <div className="w-1/2 text-right">
-          <span className="block text-xs font-bold uppercase tracking-wider text-md-tertiary mb-0.5">
-            Total Payable
-          </span>
+          <div className="flex items-center justify-end gap-1.5 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-md-tertiary">
+              Total Payable
+            </span>
+            {onToggleRoundToRupee && (
+              <button
+                type="button"
+                onClick={() => onToggleRoundToRupee(!roundToRupee)}
+                title="Tap to toggle whole rupee rounding"
+                className={`px-2 py-0.5 text-[10px] font-bold rounded-full border transition-all cursor-pointer ${
+                  roundToRupee
+                    ? 'bg-md-primary text-md-on-primary border-md-primary shadow-xs'
+                    : 'bg-md-surface-container-high text-md-on-surface-variant border-md-outline/40 hover:border-md-outline'
+                }`}
+              >
+                {roundToRupee ? 'Round: ON' : 'Round: OFF'}
+              </button>
+            )}
+          </div>
           <div className="text-2xl sm:text-3xl font-black text-md-on-surface tracking-tight tabular-nums truncate">
             Rs.{' '}
             {result

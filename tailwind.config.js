@@ -72,6 +72,9 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
+      spacing: {
+        '13': '3.25rem',
+      },
     },
   },
   plugins: [],

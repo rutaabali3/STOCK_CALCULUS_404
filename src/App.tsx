@@ -137,7 +137,11 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 pb-24 md:pb-6 overflow-y-auto">
         {activeTab === 'weigh' && (
-          <Weigh settings={settings} onSaveSlip={handleSaveSlip} />
+          <Weigh
+            settings={settings}
+            onUpdateSettings={handleUpdateSettings}
+            onSaveSlip={handleSaveSlip}
+          />
         )}
 
         {activeTab === 'history' && (
