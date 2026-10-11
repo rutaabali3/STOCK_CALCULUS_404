@@ -67,7 +67,7 @@ export const InstallPrompt: React.FC = () => {
   // Android / Desktop native install banner
   if (deferredPrompt) {
     return (
-      <div className="bg-md-surface-container-high text-md-on-surface px-4 py-2.5 flex items-center justify-between text-xs font-semibold shadow-sm border-b border-md-outline-variant/30">
+      <div className="w-full shrink-0 bg-md-surface-container-high text-md-on-surface px-4 py-2.5 flex items-center justify-between text-xs font-semibold shadow-sm border-b border-md-outline-variant/30">
         <div className="flex items-center gap-2.5">
           <Download className="w-4 h-4 text-md-primary shrink-0" />
           <span>Install Mandi App for faster, instant offline access</span>
@@ -97,7 +97,7 @@ export const InstallPrompt: React.FC = () => {
   // iOS Safari "Add to Home Screen" guide banner
   if (showIosPrompt) {
     return (
-      <div className="bg-md-surface-container-high text-md-on-surface px-4 py-2.5 flex items-center justify-between text-xs font-medium shadow-sm border-b border-md-outline-variant/30">
+      <div className="w-full shrink-0 bg-md-surface-container-high text-md-on-surface px-4 py-2.5 flex items-center justify-between text-xs font-medium shadow-sm border-b border-md-outline-variant/30">
         <div className="flex items-center gap-2.5">
           <Share className="w-4 h-4 text-md-primary shrink-0" />
           <span>

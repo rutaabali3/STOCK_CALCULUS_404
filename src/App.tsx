@@ -165,7 +165,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-md-surface text-md-on-surface flex flex-col md:flex-row transition-colors duration-200">
       <UpdatePrompt />
-      <InstallPrompt />
 
       {/* Responsive MD3 Navigation (Rail on md+, Bottom Bar on mobile) */}
       {activeTab !== 'slip' && (
@@ -178,6 +177,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 pb-24 md:pb-6 overflow-y-auto">
+        {activeTab !== 'slip' && <InstallPrompt />}
         {activeTab === 'weigh' && (
           <Weigh
             settings={settings}

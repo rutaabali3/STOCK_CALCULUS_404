@@ -26,8 +26,11 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
   const [voidReason, setVoidReason] = useState('');
   const [voidError, setVoidError] = useState<string | null>(null);
 
+  const [refreshing, setRefreshing] = useState(false);
+
   useEffect(() => {
     loadSlips();
+    syncWorker.triggerSync();
     const unsub = syncWorker.subscribe((state) => {
       if (!state.isSyncing) {
         loadSlips();
@@ -121,6 +124,21 @@ export const History: React.FC<HistoryProps> = ({ onSelectSlip, onBack }) => {
             </p>
           </div>
         </div>
+
+        <Md3Button
+          variant="tonal"
+          size="sm"
+          onClick={async () => {
+            setRefreshing(true);
+            await syncWorker.triggerSync();
+            await loadSlips();
+            setRefreshing(false);
+          }}
+          loading={refreshing}
+          icon={<RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />}
+        >
+          Sync Slips
+        </Md3Button>
       </header>
 
       {/* Search and Filters Bar */}

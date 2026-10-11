@@ -112,7 +112,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
    * ------------------------------------------------------------- */
   if (req.method === 'GET') {
     const q = typeof req.query.q === 'string' ? req.query.q.trim().toLowerCase() : '';
-    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 30, 1), 100);
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 200, 1), 500);
 
     let rows;
     if (q) {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getMandiDB } from '../lib/db';
+import { syncWorker } from '../lib/sync';
 import { Lock, ArrowRight } from 'lucide-react';
 import { Md3Button } from '../components/md3/Md3Button';
 import { Md3Card } from '../components/md3/Md3Card';
@@ -60,6 +61,9 @@ export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
       // Store token in IndexedDB
       const db = await getMandiDB();
       await db.put('auth', { token: data.token, expiresAt: data.expiresAt }, 'current');
+
+      // Immediately pull cloud slips into this browser
+      syncWorker.triggerSync();
 
       onSuccess();
     } catch (err: unknown) {
