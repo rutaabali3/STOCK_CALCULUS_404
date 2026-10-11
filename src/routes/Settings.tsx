@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { AppSettings, ThemeMode } from '../lib/settings';
+import { AppSettings, ThemeMode, SlipFontSize, DEFAULT_SLIP_CUSTOMIZATION } from '../lib/settings';
 import { exportBackupData, importBackupData, BackupData, getOrCreateDeviceId } from '../lib/db';
 import { formatDecimal, parseDecimal } from 'shared/decimal';
-import { Download, Upload, ArrowLeft, Check, ShieldCheck, Sun, Moon, Monitor } from 'lucide-react';
+import { Download, Upload, ArrowLeft, Check, ShieldCheck, Sun, Moon, Monitor, SlidersHorizontal } from 'lucide-react';
 import { Md3Button } from '../components/md3/Md3Button';
 import { Md3Card } from '../components/md3/Md3Card';
 import { Md3TextField } from '../components/md3/Md3TextField';
@@ -30,6 +30,25 @@ export const Settings: React.FC<SettingsProps> = ({
   const [slipWidthMm, setSlipWidthMm] = useState<58 | 80 | 90>(settings.slipWidthMm);
   const [theme, setTheme] = useState<ThemeMode>(settings.theme || 'system');
 
+  // Slip Customization State
+  const initialCustom = settings.slipCustomization || DEFAULT_SLIP_CUSTOMIZATION;
+  const [shopSubtitle, setShopSubtitle] = useState(initialCustom.shopSubtitle ?? settings.shopSubtitle ?? 'Mandi Commission Shop');
+  const [shopPhone, setShopPhone] = useState(initialCustom.shopPhone ?? settings.shopPhone ?? '');
+  const [shopAddress, setShopAddress] = useState(initialCustom.shopAddress ?? settings.shopAddress ?? '');
+  const [footerText, setFooterText] = useState(initialCustom.footerText ?? settings.footerText ?? 'Standard: 1 Mann = 40 kg • Computer Generated Slip');
+  const [showBagsGrid, setShowBagsGrid] = useState(initialCustom.showBagsGrid !== false);
+  const [showParties, setShowParties] = useState(initialCustom.showParties !== false);
+  const [showDate, setShowDate] = useState(initialCustom.showDate !== false);
+  const [showSlipCode, setShowSlipCode] = useState(initialCustom.showSlipCode !== false);
+  const [showMann, setShowMann] = useState(initialCustom.showMann !== false);
+  const [showTare, setShowTare] = useState(initialCustom.showTare !== false);
+  const [showGrossWeight, setShowGrossWeight] = useState(initialCustom.showGrossWeight !== false);
+  const [showRate, setShowRate] = useState(initialCustom.showRate !== false);
+  const [showBaseAmount, setShowBaseAmount] = useState(initialCustom.showBaseAmount !== false);
+  const [showFooter, setShowFooter] = useState(initialCustom.showFooter !== false);
+  const [compactMode, setCompactMode] = useState(Boolean(initialCustom.compactMode));
+  const [fontSize, setFontSize] = useState<SlipFontSize>(initialCustom.fontSize || 'base');
+
   const [toast, setToast] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const deviceId = getOrCreateDeviceId();
@@ -45,12 +64,34 @@ export const Settings: React.FC<SettingsProps> = ({
 
     const updated: AppSettings = {
       shopName: shopName.trim() || 'Mandi Commission Shop',
+      shopSubtitle: shopSubtitle.trim(),
+      shopPhone: shopPhone.trim(),
+      shopAddress: shopAddress.trim(),
+      footerText: footerText.trim(),
       defaultRatePaisa,
       defaultTareG,
       chargeMode,
       roundToRupee,
       slipWidthMm,
       theme,
+      slipCustomization: {
+        shopSubtitle: shopSubtitle.trim(),
+        shopPhone: shopPhone.trim(),
+        shopAddress: shopAddress.trim(),
+        footerText: footerText.trim(),
+        showBagsGrid,
+        showParties,
+        showDate,
+        showSlipCode,
+        showMann,
+        showTare,
+        showGrossWeight,
+        showRate,
+        showBaseAmount,
+        showFooter,
+        compactMode,
+        fontSize,
+      },
     };
 
     onUpdateSettings(updated);
@@ -237,7 +278,144 @@ export const Settings: React.FC<SettingsProps> = ({
           </div>
         </Md3Card>
 
-        {/* Card 3: Data Backup & Restore */}
+        {/* Card 3: Slip Customization & Branding */}
+        <Md3Card variant="elevated" className="p-5 space-y-4 md:col-span-2">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-md-primary" />
+            <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
+              Slip Customization & Branding
+            </h2>
+          </div>
+          <p className="text-xs text-md-on-surface-variant leading-relaxed">
+            Configure contact details printed on the slip, toggle sections to display, and set thermal print options.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Md3TextField
+              label="Shop Tagline / Subtitle"
+              value={shopSubtitle}
+              onChange={(e) => setShopSubtitle(e.target.value)}
+              placeholder="e.g. Mandi Commission Shop"
+            />
+            <Md3TextField
+              label="Phone / WhatsApp Contact"
+              value={shopPhone}
+              onChange={(e) => setShopPhone(e.target.value)}
+              placeholder="e.g. 0300-1234567"
+            />
+            <Md3TextField
+              label="Shop Address / Market Location"
+              value={shopAddress}
+              onChange={(e) => setShopAddress(e.target.value)}
+              placeholder="e.g. Shop #12, Ghalla Mandi"
+            />
+          </div>
+
+          <Md3TextField
+            label="Custom Footer Slogan / Notice"
+            value={footerText}
+            onChange={(e) => setFooterText(e.target.value)}
+            placeholder="e.g. Standard: 1 Mann = 40 kg • Computer Generated Slip"
+          />
+
+          <div className="pt-2 border-t border-md-outline-variant/20 space-y-3">
+            <span className="block text-xs font-bold uppercase tracking-wider text-md-on-surface-variant">
+              Section Visibility & Print Layout
+            </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-md-surface-container-low border border-md-outline-variant/15">
+                <div>
+                  <span className="block text-xs font-bold text-md-on-surface">Bag Weights Grid</span>
+                  <span className="text-[10px] text-md-on-surface-variant">Individual bag weight chips</span>
+                </div>
+                <Md3Switch checked={showBagsGrid} onChange={setShowBagsGrid} ariaLabel="Show bag weights grid" />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-md-surface-container-low border border-md-outline-variant/15">
+                <div>
+                  <span className="block text-xs font-bold text-md-on-surface">Seller & Buyer</span>
+                  <span className="text-[10px] text-md-on-surface-variant">Party names when provided</span>
+                </div>
+                <Md3Switch checked={showParties} onChange={setShowParties} ariaLabel="Show parties" />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-md-surface-container-low border border-md-outline-variant/15">
+                <div>
+                  <span className="block text-xs font-bold text-md-on-surface">Mann Equivalent</span>
+                  <span className="text-[10px] text-md-on-surface-variant">1 Mann = 40 kg conversion</span>
+                </div>
+                <Md3Switch checked={showMann} onChange={setShowMann} ariaLabel="Show Mann line" />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-md-surface-container-low border border-md-outline-variant/15">
+                <div>
+                  <span className="block text-xs font-bold text-md-on-surface">Tare Breakdown</span>
+                  <span className="text-[10px] text-md-on-surface-variant">Tare deduction & Net weight</span>
+                </div>
+                <Md3Switch checked={showTare} onChange={setShowTare} ariaLabel="Show tare breakdown" />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-md-surface-container-low border border-md-outline-variant/15">
+                <div>
+                  <span className="block text-xs font-bold text-md-on-surface">Date & Slip Code</span>
+                  <span className="text-[10px] text-md-on-surface-variant">Timestamp & unique ID</span>
+                </div>
+                <Md3Switch checked={showDate && showSlipCode} onChange={(val) => { setShowDate(val); setShowSlipCode(val); }} ariaLabel="Show date and slip code" />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-md-surface-container-low border border-md-outline-variant/15">
+                <div>
+                  <span className="block text-xs font-bold text-md-on-surface">Gross Weight</span>
+                  <span className="text-[10px] text-md-on-surface-variant">Total weight before tare</span>
+                </div>
+                <Md3Switch checked={showGrossWeight} onChange={setShowGrossWeight} ariaLabel="Show gross weight" />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-md-surface-container-low border border-md-outline-variant/15">
+                <div>
+                  <span className="block text-xs font-bold text-md-on-surface">Rate & Base Amount</span>
+                  <span className="text-[10px] text-md-on-surface-variant">Rate/Mann & subtotal</span>
+                </div>
+                <Md3Switch checked={showRate && showBaseAmount} onChange={(val) => { setShowRate(val); setShowBaseAmount(val); }} ariaLabel="Show rate and base amount" />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-md-surface-container-low border border-md-outline-variant/15">
+                <div>
+                  <span className="block text-xs font-bold text-md-on-surface">Footer Banner</span>
+                  <span className="text-[10px] text-md-on-surface-variant">Standard notice & slogan</span>
+                </div>
+                <Md3Switch checked={showFooter} onChange={setShowFooter} ariaLabel="Show footer" />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-md-surface-container-low border border-md-outline-variant/15">
+                <div>
+                  <span className="block text-xs font-bold text-md-on-surface">Compact Paper-Saving</span>
+                  <span className="text-[10px] text-md-on-surface-variant">Tighter thermal spacing</span>
+                </div>
+                <Md3Switch checked={compactMode} onChange={setCompactMode} ariaLabel="Compact mode" />
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-md-on-surface-variant mb-1.5">
+                Print Font Scaling
+              </label>
+              <Md3SegmentedButton<SlipFontSize>
+                value={fontSize}
+                onChange={setFontSize}
+                className="w-full sm:w-auto"
+                options={[
+                  { value: 'sm', label: 'Compact / Small' },
+                  { value: 'base', label: 'Standard' },
+                  { value: 'lg', label: 'Large / High Contrast' },
+                ]}
+              />
+            </div>
+          </div>
+        </Md3Card>
+
+        {/* Card 4: Data Backup & Restore */}
         <Md3Card variant="elevated" className="p-5 space-y-4">
           <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
             Data Backup & Restore
@@ -276,7 +454,7 @@ export const Settings: React.FC<SettingsProps> = ({
           </div>
         </Md3Card>
 
-        {/* Card 4: Device & System Info */}
+        {/* Card 5: Device & System Info */}
         <Md3Card variant="elevated" className="p-5 space-y-3">
           <h2 className="text-sm font-bold uppercase tracking-wider text-md-primary">
             Device & Local Storage

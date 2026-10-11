@@ -2,12 +2,13 @@ import React, { useRef, useState } from 'react';
 import { SlipCard } from '../components/SlipCard';
 import { CalcResult } from 'shared/types';
 import { ExtrasState } from '../components/ExtrasPanel';
-import { AppSettings } from '../lib/settings';
+import { AppSettings, DEFAULT_SLIP_CUSTOMIZATION, DEFAULT_SETTINGS, SlipCustomization } from '../lib/settings';
 import { shareOrDownloadSlip, generateSlipPng, downloadDataUrl, generateSlipPdf } from '../lib/slipImage';
-import { Share2, Download, PlusCircle, ArrowLeft, Check, FileText } from 'lucide-react';
+import { Share2, Download, PlusCircle, ArrowLeft, Check, FileText, SlidersHorizontal } from 'lucide-react';
 import { Md3Button } from '../components/md3/Md3Button';
 import { Md3SegmentedButton } from '../components/md3/Md3SegmentedButton';
 import { Md3TextField } from '../components/md3/Md3TextField';
+import { SlipCustomizeModal } from '../components/SlipCustomizeModal';
 
 export interface SlipData {
   slipCode: string;
@@ -21,6 +22,7 @@ export interface SlipData {
 interface SlipViewProps {
   slipData: SlipData;
   settings: AppSettings;
+  onUpdateSettings?: (newSettings: AppSettings) => void;
   onNewWeighing: () => void;
   onBackToWeighing?: () => void;
 }
@@ -28,6 +30,7 @@ interface SlipViewProps {
 export const SlipView: React.FC<SlipViewProps> = ({
   slipData,
   settings,
+  onUpdateSettings,
   onNewWeighing,
   onBackToWeighing,
 }) => {
@@ -35,6 +38,12 @@ export const SlipView: React.FC<SlipViewProps> = ({
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [currentWidthMm, setCurrentWidthMm] = useState<58 | 80 | 90>(settings.slipWidthMm);
+  const [currentShopName, setCurrentShopName] = useState<string>(settings.shopName);
+  const [customization, setCustomization] = useState<SlipCustomization>(
+    settings.slipCustomization || DEFAULT_SLIP_CUSTOMIZATION
+  );
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+
   const [customFileName, setCustomFileName] = useState<string>(
     slipData.extras.receiptName?.trim()
       ? `${slipData.extras.receiptName.trim()}-${slipData.slipCode}`
@@ -44,6 +53,44 @@ export const SlipView: React.FC<SlipViewProps> = ({
   const showToast = (msg: string) => {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(null), 3000);
+  };
+
+  const handleWidthChange = (width: 58 | 80 | 90) => {
+    setCurrentWidthMm(width);
+    if (onUpdateSettings) {
+      onUpdateSettings({
+        ...settings,
+        slipWidthMm: width,
+        slipCustomization: customization,
+      });
+    }
+  };
+
+  const handleSaveAsDefault = () => {
+    if (onUpdateSettings) {
+      onUpdateSettings({
+        ...settings,
+        shopName: currentShopName,
+        slipWidthMm: currentWidthMm,
+        slipCustomization: customization,
+      });
+      showToast('Slip customization saved as default');
+    }
+  };
+
+  const handleResetDefaults = () => {
+    setCustomization(DEFAULT_SLIP_CUSTOMIZATION);
+    setCurrentWidthMm(DEFAULT_SETTINGS.slipWidthMm);
+    setCurrentShopName(DEFAULT_SETTINGS.shopName);
+    if (onUpdateSettings) {
+      onUpdateSettings({
+        ...settings,
+        shopName: DEFAULT_SETTINGS.shopName,
+        slipWidthMm: DEFAULT_SETTINGS.slipWidthMm,
+        slipCustomization: DEFAULT_SLIP_CUSTOMIZATION,
+      });
+    }
+    showToast('Reset to default layout');
   };
 
   const handleShare = async () => {
@@ -123,21 +170,34 @@ export const SlipView: React.FC<SlipViewProps> = ({
           </div>
         </div>
 
-        {/* Width Toggle */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="text-xs font-bold uppercase tracking-wider text-md-on-surface-variant hidden md:inline">
-            Print Width:
-          </span>
-          <Md3SegmentedButton<58 | 80 | 90>
+        {/* Action controls in header */}
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {/* Customize Slip Pill */}
+          <Md3Button
+            variant="tonal"
             size="sm"
-            value={currentWidthMm}
-            onChange={setCurrentWidthMm}
-            options={[
-              { value: 58, label: '58 mm' },
-              { value: 80, label: '80 mm' },
-              { value: 90, label: '90 mm' },
-            ]}
-          />
+            onClick={() => setIsCustomizeOpen(true)}
+            icon={<SlidersHorizontal className="w-4 h-4 text-md-primary" />}
+          >
+            Customize Slip
+          </Md3Button>
+
+          {/* Width Toggle */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-md-on-surface-variant hidden lg:inline">
+              Width:
+            </span>
+            <Md3SegmentedButton<58 | 80 | 90>
+              size="sm"
+              value={currentWidthMm}
+              onChange={handleWidthChange}
+              options={[
+                { value: 58, label: '58mm' },
+                { value: 80, label: '80mm' },
+                { value: 90, label: '90mm' },
+              ]}
+            />
+          </div>
         </div>
       </header>
 
@@ -148,7 +208,7 @@ export const SlipView: React.FC<SlipViewProps> = ({
             ref={cardRef}
             slipCode={slipData.slipCode}
             createdAt={slipData.createdAt}
-            shopName={settings.shopName}
+            shopName={currentShopName}
             weightsG={slipData.weightsG}
             calcResult={slipData.calcResult}
             extras={slipData.extras}
@@ -156,6 +216,7 @@ export const SlipView: React.FC<SlipViewProps> = ({
             slipWidthMm={currentWidthMm}
             chargeMode={settings.chargeMode}
             roundToRupee={settings.roundToRupee}
+            customization={customization}
           />
         </div>
       </div>
@@ -215,6 +276,20 @@ export const SlipView: React.FC<SlipViewProps> = ({
         </Md3Button>
       </div>
 
+      {/* Customize Slip Modal */}
+      <SlipCustomizeModal
+        open={isCustomizeOpen}
+        onClose={() => setIsCustomizeOpen(false)}
+        customization={customization}
+        onChangeCustomization={setCustomization}
+        shopName={currentShopName}
+        onChangeShopName={setCurrentShopName}
+        slipWidthMm={currentWidthMm}
+        onChangeSlipWidthMm={setCurrentWidthMm}
+        onResetDefaults={handleResetDefaults}
+        onSaveAsDefault={handleSaveAsDefault}
+      />
+
       {/* MD3 Success Notification Snackbar */}
       {successMsg && (
         <div className="fixed bottom-24 md:bottom-8 right-4 left-4 md:left-auto md:w-96 bg-md-inverse-surface text-md-inverse-on-surface px-5 py-3 rounded-2xl shadow-md-3 flex items-center justify-center gap-2 z-50 text-sm font-semibold animate-fade-in border border-white/10">
@@ -225,3 +300,4 @@ export const SlipView: React.FC<SlipViewProps> = ({
     </div>
   );
 };
+

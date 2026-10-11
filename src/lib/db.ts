@@ -155,7 +155,24 @@ export async function voidSlipRecord(id: string, reason: string): Promise<LocalS
 export async function getStoredSettings(): Promise<AppSettings> {
   const db = await getMandiDB();
   const saved = await db.get('settings', 'current');
-  return saved ? { ...DEFAULT_SETTINGS, ...saved } : DEFAULT_SETTINGS;
+  if (!saved) return DEFAULT_SETTINGS;
+  const slipCustomization = {
+    ...DEFAULT_SETTINGS.slipCustomization,
+    ...(saved.shopSubtitle !== undefined ? { shopSubtitle: saved.shopSubtitle } : {}),
+    ...(saved.shopPhone !== undefined ? { shopPhone: saved.shopPhone } : {}),
+    ...(saved.shopAddress !== undefined ? { shopAddress: saved.shopAddress } : {}),
+    ...(saved.footerText !== undefined ? { footerText: saved.footerText } : {}),
+    ...(saved.slipCustomization || {}),
+  };
+  return {
+    ...DEFAULT_SETTINGS,
+    ...saved,
+    shopSubtitle: slipCustomization.shopSubtitle,
+    shopPhone: slipCustomization.shopPhone,
+    shopAddress: slipCustomization.shopAddress,
+    footerText: slipCustomization.footerText,
+    slipCustomization,
+  };
 }
 
 export async function setStoredSettings(settings: AppSettings): Promise<void> {

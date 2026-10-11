@@ -163,6 +163,7 @@ export default function App() {
           <SlipView
             slipData={currentSlip}
             settings={settings}
+            onUpdateSettings={handleUpdateSettings}
             onNewWeighing={() => {
               setCurrentSlip(null);
               setActiveTab('weigh');
